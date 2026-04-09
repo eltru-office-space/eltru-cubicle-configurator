@@ -6,14 +6,18 @@
   "scripts": {
     "start": "node server.js"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
-    "@supabase/supabase-js": "^2.x",
-    "cors": "^2.x",
-    "dotenv": "^16.x",
-    "express": "^4.x",
+    "@sparticuz/chromium": "^143.0.4",
+    "@supabase/supabase-js": "^2.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
     "multer": "^2.1.1",
-    "nanoid": "^3.x",
-    "puppeteer": "^24.40.0",
-    "qrcode": "^1.x"
+    "nanoid": "^3.3.6",
+    "puppeteer-core": "^24.40.0",
+    "qrcode": "^1.5.3"
   }
 }
