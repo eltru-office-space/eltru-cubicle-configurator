@@ -39,7 +39,7 @@ app.use(cors({
     // Allow requests with no origin (curl, Puppeteer, server-to-server)
     if (!origin) return cb(null, true);
     if (ALLOWED_ORIGINS.some(o => origin === o || origin.startsWith(o))) return cb(null, true);
-    cb(new Error(`CORS: origin ${origin} not allowed`));
+    cb(null, false);
   },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -205,23 +205,27 @@ app.get('/api/layers', async (req, res) => {
 });
 
 // ── POST /api/auth/sales ─────────────────────────────────────
-app.post('/api/auth/sales', authLimiter, (req, res) => {
-  if (!req.body.password) return res.status(400).json({ ok: false });
-  if (req.body.password === process.env.SALES_PASSWORD) {
-    res.json({ ok: true });
-  } else {
-    res.status(401).json({ ok: false });
-  }
+app.post('/api/auth/sales', authLimiter, (req, res, next) => {
+  try {
+    if (!req.body.password) return res.status(400).json({ ok: false });
+    if (req.body.password === process.env.SALES_PASSWORD) {
+      res.json({ ok: true });
+    } else {
+      res.status(401).json({ ok: false });
+    }
+  } catch (err) { next(err); }
 });
 
 // ── POST /api/auth/admin ─────────────────────────────────────
-app.post('/api/auth/admin', authLimiter, (req, res) => {
-  if (!req.body.password) return res.status(400).json({ ok: false });
-  if (req.body.password === process.env.ADMIN_PASSWORD) {
-    res.json({ ok: true });
-  } else {
-    res.status(401).json({ ok: false });
-  }
+app.post('/api/auth/admin', authLimiter, (req, res, next) => {
+  try {
+    if (!req.body.password) return res.status(400).json({ ok: false });
+    if (req.body.password === process.env.ADMIN_PASSWORD) {
+      res.json({ ok: true });
+    } else {
+      res.status(401).json({ ok: false });
+    }
+  } catch (err) { next(err); }
 });
 
 // ── GET /api/sales/recent ────────────────────────────────────
