@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Eltru — Your Quote</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -357,9 +358,22 @@
     /* ── MOBILE ──────────────────────────────────────────── */
     @media (max-width: 768px) {
       header { padding: 0 16px; }
-      .main-wrap { padding: 20px 16px 48px; }
-      .content-grid { grid-template-columns: 1fr; }
-      .quote-card { position: static; }
+      .header-inner { height: 52px; }
+      .header-meta  { gap: 8px; }
+      .main-wrap    { padding: 16px 14px 48px; }
+      /* Stack two columns to single */
+      .content-grid { grid-template-columns: 1fr; gap: 16px; }
+      .quote-card   { position: static; }
+      /* Visual box shorter on mobile */
+      .visual-wrap  { height: 220px; margin-bottom: 16px; }
+      /* CTA buttons full width */
+      #cta-section .btn { width: 100%; }
+      /* Expiry badge wraps */
+      .header-meta  { flex-wrap: wrap; }
+      /* Breakdown table text smaller */
+      .breakdown    { font-size: 12px; }
+      /* Spec rows tighter */
+      .spec-row { padding: 6px 0; }
     }
   </style>
 </head>

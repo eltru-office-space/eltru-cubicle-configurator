@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Eltru Sales — Quote Generator</title>
+<title>Eltru Sales Tool</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -621,6 +622,28 @@
     padding: 12px 16px;
     font-size: 0.85rem;
     margin-top: 12px;
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 768px) {
+    .app-wrap       { padding: 16px 12px 40px; }
+    .section-body   { padding: 16px; }
+    .form-grid      { grid-template-columns: 1fr; }
+    /* Quote result: stack QR below link */
+    .qlc-body       { grid-template-columns: 1fr; }
+    .qlc-qr         { justify-content: flex-start; }
+    /* Link input: break overflow */
+    .qlc-link-input { font-size: 0.75rem; word-break: break-all; }
+    /* CTA buttons full width */
+    .qlc-actions    { flex-direction: column; }
+    .btn-outline-white { width: 100%; text-align: center; }
+    /* Table: horizontal scroll, show condensed columns */
+    .table-wrap     { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table           { min-width: 500px; }
+    /* Section cards full width, less padding */
+    .section-card   { border-radius: 10px; }
+    /* App header smaller */
+    .app-header     { padding: 14px 16px 12px; }
   }
 </style>
 </head>

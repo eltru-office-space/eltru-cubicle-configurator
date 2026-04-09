@@ -1,8 +1,12 @@
-# Eltru Configurator — CLAUDE.md
+# Eltru Cubicle Configurator — Complete System
 
-## Project Purpose
+## What This Is
 
-The Eltru Configurator is a web-based cubicle configuration and quoting system for Eltru (eltru.com), an office furniture company. It allows customers or salespeople to configure cubicle setups (brand, style, size, fabric, trim, glass, pedestal, accessories) and generate shareable quote links and PDFs.
+Full-stack cubicle configurator eliminating information loss across client → sales → production → installation. Customers configure cubicles online, salespeople create custom quote links, and the Odoo integration (via OpenClaw agent) pulls structured data directly into the ERP.
+
+## Live URL
+
+https://eltru-cubicle-configurator-production.up.railway.app
 
 ## Tech Stack
 
@@ -13,54 +17,97 @@ The Eltru Configurator is a web-based cubicle configuration and quoting system f
 - **Frontend:** Vanilla HTML/CSS/JS (served as static files)
 - **Deployment:** Railway (auto-deploy from GitHub)
 
-## How to Run
+## All Pages
 
-```bash
-# Install dependencies
-npm install
+| URL | Description | Auth |
+|---|---|---|
+| `/` or `/index.html` | Public configurator (client-facing) | None |
+| `/embed.html` | Iframe-embeddable configurator (passes params through) | None |
+| `/quote.html?token=XXX` | Client quote view (salesperson-shared link) | Token |
+| `/sales.html` | Salesperson tool — load configs, create quotes, email clients | SALES_PASSWORD |
+| `/admin.html` | Admin panel — layers, pricing, configs, products | ADMIN_PASSWORD |
+| `/pdf-template.html` | PDF generation template (internal, used by Puppeteer) | None |
+| `/404.html` | Not found page | None |
 
-# Copy and fill in env vars
-cp .env.example .env
-# Edit .env with your Supabase credentials
+## All API Endpoints
 
-# Start the server
-node server.js
-```
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | /health | None | Health check |
+| GET | /api/options | None | All product options in one call |
+| GET | /api/layers | None | Layer image lookup (bulk or single) |
+| GET | /api/embed/code | None | Returns iframe embed snippet |
+| POST | /api/auth/sales | None | Sales password verification |
+| POST | /api/auth/admin | None | Admin password verification |
+| POST | /api/configs | None | Save config (fires email, validates input) |
+| GET | /api/configs/:code | None | Load config by code (enriched) |
+| POST | /api/quotes | None | Create a quote link |
+| GET | /api/quotes/:token | None | Load quote by token |
+| POST | /api/quotes/:token/accept | None | Client accepts quote (fires email) |
+| POST | /api/quotes/:token/send-email | None | Email quote link to a recipient |
+| POST | /api/pdf | None | Generate and return PDF binary |
+| GET | /api/pdf/download/:code | None | Direct PDF download URL (for Odoo notes) |
+| GET | /api/sales/recent | SALES_PASSWORD | Recent configs for sales dashboard |
+| GET | /api/admin/layers | ADMIN_PASSWORD | List all layer assets |
+| POST | /api/admin/layers/upload | ADMIN_PASSWORD | Upload layer image to Supabase Storage |
+| DELETE | /api/admin/layers/:id | ADMIN_PASSWORD | Delete layer asset |
+| POST | /api/admin/layers | ADMIN_PASSWORD | Legacy JSON-based layer insert |
+| GET | /api/admin/configs | ADMIN_PASSWORD | All configurations |
+| GET | /api/admin/pricing | ADMIN_PASSWORD | All pricing rows |
+| PUT | /api/admin/pricing/:id | ADMIN_PASSWORD | Update pricing row |
+| GET | /api/odoo/config/:code | ADMIN_PASSWORD | Structured config payload for Odoo |
+| GET | /api/odoo/quote/:token | ADMIN_PASSWORD | Structured quote payload for Odoo |
 
-Server runs on PORT from `.env` (default 3000).
+## Rate Limits
+
+| Route | Window | Max |
+|---|---|---|
+| POST /api/configs | 1 hour | 10 |
+| POST /api/pdf + GET /api/pdf/download/* | 1 hour | 5 |
+| POST /api/auth/* | 15 min | 10 |
 
 ## Environment Variables
 
-| Variable | Description |
-|---|---|
-| `SUPABASE_URL` | Your Supabase project URL (e.g. https://xxxx.supabase.co) |
-| `SUPABASE_ANON_KEY` | Supabase anon/public key (safe for client-side) |
-| `SUPABASE_SERVICE_KEY` | Supabase service role key (server-only, full DB access) |
-| `SALES_PASSWORD` | Password for salesperson-facing features |
-| `ADMIN_PASSWORD` | Password for admin API routes |
-| `PORT` | Port to run Express on (default: 3000) |
-| `BASE_URL` | Full base URL for generating share links (e.g. http://localhost:3000) |
-| `RESEND_API_KEY` | Resend API key for transactional emails (optional — falls back to console.log) |
-| `ELTRU_EMAIL` | Internal notification email address (default: hello@eltru.com) |
+| Variable | Required | Description |
+|---|---|---|
+| `SUPABASE_URL` | Yes | Supabase project URL |
+| `SUPABASE_ANON_KEY` | Yes | Supabase anon/public key |
+| `SUPABASE_SERVICE_KEY` | Yes | Supabase service role key (server only) |
+| `SALES_PASSWORD` | Yes | Password for salesperson features |
+| `ADMIN_PASSWORD` | Yes | Password for admin API routes + Odoo endpoints |
+| `BASE_URL` | Yes | Full base URL (e.g. https://eltru-cubicle-configurator-production.up.railway.app) |
+| `PORT` | No | Express port (default: 3000) |
+| `RESEND_API_KEY` | No | Resend API key for transactional emails (falls back to console.log) |
+| `ELTRU_EMAIL` | No | Internal notification address (default: hello@eltru.com) |
+
+## Email System (`lib/email.js`)
+
+Three exported functions — all non-blocking, errors logged but never thrown:
+
+- `sendConfigSavedEmail(config)` — fires after config saved; sends to client (if email provided) + Eltru team
+- `sendQuoteAcceptedEmail(quote, config)` — fires when client accepts; red "Action Needed" header to Eltru team
+- `sendQuoteLinkEmail(quote, config, recipientEmail)` — called by POST /api/quotes/:token/send-email
+
+Requires `RESEND_API_KEY` env var. Without it, logs `[EMAIL MOCK]` to console.
 
 ## Supabase Table Structure
 
 ### Lookup/Option Tables
-- **brands** — cubicle brand options
-- **styles** — panel styles per brand
-- **sizes** — cubicle size options
-- **heights** — panel height options
-- **fabrics** — fabric/color options
-- **trims** — trim color options
-- **glass_options** — glass panel options
-- **pedestals** — pedestal/storage options
+- **brands** — cubicle brand options (sort_order, slug, name)
+- **styles** — panel styles per brand (sort_order, slug, name, brand_id)
+- **sizes** — cubicle size options (sort_order, slug, label, width_in, depth_in, style_id)
+- **heights** — panel height options (sort_order, slug, label, height_in, brand_id)
+- **fabrics** — fabric/color options (sort_order, slug, name, hex_color, description)
+- **trims** — trim color options (sort_order, slug, name, hex_color)
+- **glass_options** — glass panel options (sort_order, slug, name, description, l_shape_only)
+- **pedestals** — pedestal/storage options (sort_order, slug, name, description, l_shape_only)
 
 ### Core Tables
-- **layer_assets** — PNG image layers for the visual configurator
+- **layer_assets** — PNG/WebP image layers for visual configurator
 - **pricing** — pricing rules per option combination
 - **configurations** — saved cubicle configurations
 
-  Key columns: `id`, `config_code`, `brand_id`, `style_id`, `size_id`, `height_id`, `height_id_2`, `fabric_id`, `trim_id`, `glass_id`, `pedestal_id`, `base_price_usd`, `total_price_usd`, `outlet_count`, `harness_count`, `monitor_arm`, `quantity`, `client_name`, `client_email`, `client_company`, `notes`, `created_at`, `created_by`, `session_id`
+  Key columns: `id`, `config_code`, `brand_id`, `style_id`, `size_id`, `height_id`, `height_id_2`, `fabric_id`, `trim_id`, `glass_id`, `pedestal_id`, `base_price_usd`, `total_price_usd`, `outlet_count`, `harness_count`, `monitor_arm`, `quantity`, `client_name`, `client_email`, `client_company`, `notes`, `created_at`, `created_by`, `session_id` (used for referral source tracking)
 
 - **quote_links** — salesperson-generated shareable quote links
 
@@ -68,50 +115,90 @@ Server runs on PORT from `.env` (default 3000).
 
 - **pdf_exports** — log of generated PDFs
 
-## API Routes
+## How to Add a New Brand/Model
 
-| Method | Path | Description |
-|---|---|---|
-| GET | /health | Health check |
-| GET | /api/options | All product options in one call |
-| GET | /api/layers | Layer image lookup (bulk or single) |
-| POST | /api/configs | Save a new configuration (fires email) |
-| GET | /api/configs/:code | Load config by code (enriched) |
-| POST | /api/quotes | Create a quote link |
-| GET | /api/quotes/:token | Load quote by token |
-| POST | /api/quotes/:token/accept | Client accepts quote (fires email) |
-| POST | /api/quotes/:token/send-email | Email quote link to a recipient |
-| POST | /api/pdf | Generate and return PDF binary |
-| POST | /api/auth/sales | Sales password check |
-| POST | /api/auth/admin | Admin password check |
-| GET | /api/admin/layers | List layer assets |
-| POST | /api/admin/layers/upload | Upload layer image |
-| DELETE | /api/admin/layers/:id | Delete layer asset |
-| GET | /api/admin/configs | All configurations (admin) |
-| GET | /api/admin/pricing | All pricing rows |
-| PUT | /api/admin/pricing/:id | Update a pricing row |
+1. Add brand row to Supabase `brands` table
+2. Add style rows to `styles` table (with `brand_id`)
+3. Add size rows to `sizes` table (with `style_id`)
+4. Add height rows to `heights` table (with `brand_id`)
+5. Add pricing rows to `pricing` table for the base configuration
+6. Upload layer images via **admin.html → Layer Assets tab**
+7. Set pricing via **admin.html → Pricing tab**
 
-## Rate Limits
+## How to Update Pricing
 
-| Route | Window | Max requests |
-|---|---|---|
-| POST /api/configs | 1 hour | 10 |
-| POST /api/pdf | 1 hour | 5 |
-| POST /api/auth/* | 15 min | 10 |
+Admin panel → Pricing tab → click any price → edit inline → Enter or ✓
 
-## Email System (`lib/email.js`)
+## URL Params for Direct Linking
 
-Three exported functions, all non-blocking (errors logged, never thrown):
+| Param | Effect |
+|---|---|
+| `?config=ELT-XXXX` | Load and display a saved configuration |
+| `?brand=knoll-reff` | Pre-select brand on load |
+| `?style=straight` | Pre-select style (requires `?brand=`) |
+| `?ref=facebook` | Store referral source in `session_id` field |
+| `?token=XXXX` | Redirect to quote.html with that token |
+| `?embed=1` | Hide header, show "Powered by Eltru" footer |
 
-- `sendConfigSavedEmail(config)` — fires after config saved; sends to client (if email provided) and Eltru team
-- `sendQuoteAcceptedEmail(quote, config)` — fires when client accepts quote; red "Action Needed" header to team
-- `sendQuoteLinkEmail(quote, config, recipientEmail)` — called by `POST /api/quotes/:token/send-email`
+## Embeddable Configurator
 
-All require `RESEND_API_KEY` env var. Without it, mocked to console.log.
+Direct link: `https://eltru-cubicle-configurator-production.up.railway.app/embed.html`
 
-## Config Codes
+Iframe embed:
+```html
+<iframe src="https://eltru-cubicle-configurator-production.up.railway.app/embed.html"
+  width="100%" height="800" frameborder="0"
+  style="border-radius:12px;border:1px solid #E0DCD4;"></iframe>
+```
 
-Config codes use the format `ELT-XXXX` where X is an uppercase letter or number, excluding ambiguous characters (0, O, I, 1). Example: `ELT-K7MN`.
+Pre-select a product:
+```
+/embed.html?brand=knoll-reff&style=straight
+```
+
+Track source (saved in session_id):
+```
+/?ref=facebook&brand=knoll-reff
+```
+
+## Odoo / OpenClaw Integration
+
+### How it works
+
+1. Salesperson creates a configuration in the configurator
+2. Config code (e.g. `ELT-K7MN`) is pasted into Odoo order notes
+3. OpenClaw agent reads the config code (regex: `ELT-[A-Z0-9]{4}`)
+4. Agent calls `GET /api/odoo/config/{code}` with `Authorization: {ADMIN_PASSWORD}`
+5. Uses the structured JSON response to populate Odoo:
+
+| API field | Odoo field |
+|---|---|
+| `odoo_product_name` | Product name |
+| `odoo_description` | Order line description |
+| `odoo_internal_notes` | Internal notes |
+| `line_items[0].unit_price` | Unit price |
+| `line_items[0].quantity` | Quantity |
+| `client.name` / `.email` / `.company` | Customer fields |
+| `pdf_url` | Attach to order for installer |
+
+### If quote was sent
+
+Use `GET /api/odoo/quote/{token}` instead — includes `custom_price`, `salesperson`, `accepted_at`.
+
+### PDF URL for installer
+
+`GET /api/pdf/download/{code}` — direct URL, no POST needed. Include in Odoo order notes.
+
+## How to Run Locally
+
+```bash
+npm install
+cp .env.example .env
+# Edit .env with Supabase credentials
+node server.js
+```
+
+Server runs on PORT from `.env` (default 3000).
 
 ## 6-Session Build Plan
 
@@ -122,8 +209,12 @@ Config codes use the format `ELT-XXXX` where X is an uppercase letter or number,
 | 3 | PDF generation — Puppeteer, quote PDF layout | ✓ Done |
 | 4 | Frontend configurator — layer-based visual builder (canvas/img layers) | ✓ Done |
 | 5 | Client capture (Step 9), Resend email, PDF polish, rate limiting, admin improvements | ✓ Done |
-| 6 | Final polish, testing, deployment | — |
+| 6 | Odoo integration, embed link, mobile polish, production hardening | ✓ Done |
 
-## Live URL
+## What to Do Next
 
-https://eltru-cubicle-configurator-production.up.railway.app
+1. **Upload real layer images** — Use admin.html → Layer Assets tab to upload WebP layers for each brand/style/fabric combination
+2. **Set up Resend** — Add `RESEND_API_KEY` to Railway Variables, set `ELTRU_EMAIL` to your team's address
+3. **Configure OpenClaw** — Point the agent at `GET /api/odoo/config/{code}` with the `ADMIN_PASSWORD` in the Authorization header
+4. **Add Facebook Marketplace links** — Use `/?ref=facebook&brand=knoll-reff` to track which listings drive configs
+5. **Test with real clients** — Run through the full 9-step flow, confirm emails arrive, PDF downloads correctly

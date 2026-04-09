@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Eltru Admin</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -175,6 +176,26 @@
 
   /* ── Toast ── */
   #toast { position:fixed; bottom:32px; left:50%; transform:translateX(-50%); background:var(--acc); color:#fff; padding:10px 22px; border-radius:100px; font-size:.82rem; font-weight:500; z-index:9999; opacity:0; pointer-events:none; transition:opacity .3s; box-shadow:0 4px 16px rgba(0,0,0,.15); }
+
+  /* ── MOBILE ── */
+  @media (max-width: 768px) {
+    .tabs-bar { padding:0 8px; overflow-x:auto; -webkit-overflow-scrolling:touch; white-space:nowrap; flex-wrap:nowrap; }
+    .tab-btn  { padding:14px 16px; font-size:.78rem; flex-shrink:0; }
+    .tab-panel { padding:16px; }
+    /* Layer cards: max 2 columns on mobile */
+    .layer-grid { grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; }
+    /* Coverage matrix: horizontal scroll */
+    #coverage-matrix-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .coverage-table { font-size:.72rem; }
+    /* Tables: horizontal scroll */
+    .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    table { min-width:480px; }
+    /* Search row stack */
+    .search-row { flex-wrap:wrap; gap:6px; }
+    .search-input { min-width:120px; }
+    /* Card padding */
+    .card { padding:16px; }
+  }
 </style>
 </head>
 <body>

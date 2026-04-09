@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Eltru — Cubicle Configurator</title>
+  <meta name="description" content="Configure your perfect cubicle and get an instant quote from Eltru Office Furniture.">
+  <meta property="og:title" content="Eltru Cubicle Configurator">
+  <meta property="og:description" content="Configure your perfect cubicle and get an instant quote from Eltru Office Furniture">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#1C3B2A">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -502,6 +508,24 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .loading-text { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.5; }
 
+    /* ── EMBED MODE (?embed=1) ───────────────────────────────────── */
+    body.embed-mode header { display: none; }
+    body.embed-mode main   { top: 0; }
+    body.embed-mode .powered-by { display: flex; }
+
+    .powered-by {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .powered-by a { color: var(--accent); text-decoration: none; font-weight: 500; }
+
     /* ── MOBILE ──────────────────────────────────────────────────── */
     @media (max-width: 768px) {
       :root { --panel-w: 100%; }
@@ -513,10 +537,37 @@
         height: auto;
         min-height: calc(100vh - 56px);
       }
-      .visual-panel  { height: 40vw; min-height: 220px; flex-shrink: 0; }
-      .config-panel  { width: 100%; border-left: none; border-top: 1px solid var(--border); }
-      .price-badge   { top: 10px; right: 10px; }
-      .spec-pill     { bottom: 10px; font-size: 11px; padding: 7px 14px; }
+      .visual-panel  { height: 55vw; min-height: 260px; flex-shrink: 0; }
+      .config-panel  { width: 100%; border-left: none; border-top: 1px solid var(--border); overflow: visible; }
+      /* Move price badge below visual on mobile — no overlap */
+      .price-badge   {
+        position: static;
+        display: block;
+        margin: 0 auto;
+        width: fit-content;
+        transform: none;
+        backdrop-filter: none;
+        box-shadow: none;
+        border-radius: 6px;
+        padding: 5px 14px;
+        font-size: 12px;
+        margin-top: -18px;
+        position: relative;
+        z-index: 20;
+      }
+      /* Hide spec pill on mobile — too small */
+      .spec-pill     { display: none; }
+      /* Step dots centered */
+      .step-dots-wrap { justify-content: center; }
+      /* Full-width stacked buttons */
+      .action-section { padding: 0 16px 20px; }
+      /* Ensure swatch labels don't truncate */
+      .swatch-info { min-width: 0; overflow: visible; }
+      .opt-name { white-space: normal; word-break: break-word; }
+      /* Summary panel tighter on mobile */
+      .summary-panel { padding: 12px 16px; }
+      .steps-scroll  { padding: 14px 16px 12px; }
+      .step-dots-wrap { padding: 14px 16px 0; }
     }
   </style>
 </head>
@@ -581,7 +632,7 @@
   </div>
 
   <!-- ── CONFIG PANEL ──────────────────────────────────────────── -->
-  <div class="config-panel">
+  <div class="config-panel" style="display:flex;flex-direction:column">
     <div class="step-dots-wrap" id="step-dots"></div>
 
     <div class="steps-scroll" id="steps-scroll">
@@ -619,6 +670,7 @@
       <button class="btn btn-secondary" id="btn-pdf"   onclick="downloadPDF()" disabled>Download PDF</button>
       <button class="btn btn-secondary" id="btn-share" onclick="shareConfig()" disabled>Share Configuration</button>
     </div>
+    <div class="powered-by">Powered by <a href="https://eltru.com" target="_blank">&nbsp;Eltru</a></div>
   </div>
 
 </main>
@@ -633,6 +685,7 @@ const state = {
   fabric: null, trim: null, glass: null, pedestal: null,
   qty: 1,
   clientName: '', clientEmail: '', clientCompany: '', clientNotes: '',
+  sessionId: null,
   currentStep: 1,
   completedSteps: new Set(),
   savedCode: null,
@@ -666,8 +719,47 @@ async function init() {
 
     const params     = new URLSearchParams(window.location.search);
     const configCode = params.get('config');
+    const brandSlug  = params.get('brand');
+    const styleSlug  = params.get('style');
+    const ref        = params.get('ref');
+    const quoteToken = params.get('token');
+    const embedMode  = params.get('embed') === '1';
+
+    // Embed mode — hide header, show powered-by
+    if (embedMode) document.body.classList.add('embed-mode');
+
+    // Store referral source in session_id field
+    if (ref) state.sessionId = ref;
+
     if (configCode) {
       await loadExistingConfig(configCode);
+    } else if (quoteToken) {
+      // Load quote pricing view — redirect to quote page
+      window.location.href = `/quote.html?token=${quoteToken}`;
+    } else if (brandSlug) {
+      // Pre-select brand (and optionally style) from URL params
+      const brand = options.brands.find(b => b.slug === brandSlug) || null;
+      if (brand) {
+        state.brand = brand;
+        state.completedSteps.add(1);
+        if (styleSlug) {
+          const style = brand.styles.find(s => s.slug === styleSlug) || null;
+          if (style) {
+            state.style = style;
+            state.completedSteps.add(2);
+            updateVisual();
+            renderStep(3);
+          } else {
+            renderStep(2);
+          }
+        } else {
+          renderStep(2);
+        }
+        updateVisual();
+        updateSummary();
+      } else {
+        renderStep(1);
+      }
     } else {
       renderStep(1);
     }
@@ -1284,6 +1376,7 @@ async function saveConfig() {
         client_email:    state.clientEmail   || undefined,
         client_company:  state.clientCompany || undefined,
         notes:           state.clientNotes   || undefined,
+        session_id:      state.sessionId     || undefined,
       }),
     });
 

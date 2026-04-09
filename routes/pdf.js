@@ -60,4 +60,35 @@ router.post('/', async (req, res) => {
   }
 });
 
+// GET /api/pdf/download/:code — direct URL download (no POST body needed)
+// Rate-limited at mount point via pdfLimiter in server.js
+router.get('/download/:code', async (req, res) => {
+  try {
+    const code = req.params.code.toUpperCase();
+
+    const { data: config, error: configErr } = await supabaseAdmin
+      .from('configurations')
+      .select('id, config_code')
+      .eq('config_code', code)
+      .single();
+
+    if (configErr || !config) {
+      return res.status(404).json({ success: false, error: 'Configuration not found' });
+    }
+
+    const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
+    const result = await generatePDF(config.config_code, null, BASE_URL);
+
+    if (!result.success) throw new Error('PDF generation failed');
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="eltru-${config.config_code}.pdf"`);
+    res.setHeader('Content-Length', result.pdfBuffer.length);
+    res.end(result.pdfBuffer);
+  } catch (err) {
+    console.error('GET /api/pdf/download error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

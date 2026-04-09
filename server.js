@@ -22,11 +22,29 @@ const configsRouter     = require('./routes/configs');
 const quotesRouter      = require('./routes/quotes');
 const pdfRouter         = require('./routes/pdf');
 const adminRouter       = require('./routes/admin');
+const odooRouter        = require('./routes/odoo');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+// ── CORS — restrict to BASE_URL and localhost in production ──
+const ALLOWED_ORIGINS = [
+  process.env.BASE_URL,
+  'http://localhost:3000',
+  'http://localhost:3001',
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, cb) => {
+    // Allow requests with no origin (curl, Puppeteer, server-to-server)
+    if (!origin) return cb(null, true);
+    if (ALLOWED_ORIGINS.some(o => origin === o || origin.startsWith(o))) return cb(null, true);
+    cb(new Error(`CORS: origin ${origin} not allowed`));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -226,11 +244,30 @@ app.get('/api/sales/recent', async (req, res) => {
   }
 });
 
+// ── GET /api/embed/code — embeddable iframe snippet ──────────
+app.get('/api/embed/code', (req, res) => {
+  const BASE = process.env.BASE_URL || 'http://localhost:3000';
+  res.json({
+    direct_link:       BASE,
+    iframe_embed:      `<iframe src="${BASE}/embed.html" width="100%" height="800" frameborder="0" style="border-radius:12px;border:1px solid #E0DCD4;"></iframe>`,
+    short_description: 'Configure your cubicle and get an instant quote at eltru.com',
+  });
+});
+
 // ── Mounted routers ──────────────────────────────────────────
 app.use('/api/configs', configsLimiter, configsRouter);
 app.use('/api/quotes',  quotesRouter);
 app.use('/api/pdf',     pdfLimiter, pdfRouter);
 app.use('/api/admin',   adminRouter);
+app.use('/api/odoo',    odooRouter);
+
+// ── 404 handler ───────────────────────────────────────────────
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ success: false, error: 'Not found' });
+  }
+  res.status(404).sendFile(path.join(__dirname, 'public', '404.html'));
+});
 
 // ── Global error handler ─────────────────────────────────────
 app.use((err, req, res, next) => {

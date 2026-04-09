@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eltru Cubicle Configurator</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; overflow: hidden; }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<script>
+  // Pass-through all URL params to the configurator in embed mode
+  const src = new URLSearchParams(window.location.search);
+  src.set('embed', '1');
+  document.write('<iframe src="/' + '?' + src.toString() + '" allowfullscreen></iframe>');
+</script>
+</body>
+</html>
