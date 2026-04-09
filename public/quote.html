@@ -566,9 +566,16 @@ function renderQuote(quote, pricing) {
   // ── Price breakdown ───────────────────────────────────────
   const qty = config.quantity || 1;
 
-  const baseRow = pricing.find(p => p.brand_id === config.brand_id && p.style_id === config.style_id);
-  const glassRow = (config.glass && config.glass.slug !== 'none')
-    ? pricing.find(p => p.glass_id === config.glass_id) : null;
+  const isKnollReff = config.brand?.slug === 'knoll-reff';
+  const baseRow = pricing.find(p =>
+    p.brand_id === config.brand_id && p.style_id === config.style_id &&
+    (config.size_id ? p.size_id === config.size_id : true) &&
+    !p.height_id && !p.fabric_id && !p.trim_id && !p.glass_id && !p.pedestal_id
+  ) || pricing.find(p => p.brand_id === config.brand_id && p.style_id === config.style_id);
+  // Knoll Reff: glass always included — no glass price ever added
+  const glassRow = (!isKnollReff && config.glass && config.glass.slug !== 'none')
+    ? pricing.find(p => p.glass_id === config.glass_id &&
+        (!p.size_id || p.size_id === config.size_id)) : null;
   const pedRow = (config.pedestal && config.pedestal.slug !== 'none')
     ? pricing.find(p => p.pedestal_id === config.pedestal_id) : null;
 
@@ -612,7 +619,7 @@ function renderQuote(quote, pricing) {
       : config.height?.label],
     ['Panel Fabric', config.fabric?.name],
     ['Trim',         config.trim?.name],
-    ['Glass',        config.glass?.name],
+    ['Glass',        isKnollReff ? 'Included standard' : config.glass?.name],
     ['Pedestal',     config.pedestal?.name],
     ['Quantity',     `${qty} unit${qty > 1 ? 's' : ''}`],
   ].filter(([, v]) => v);

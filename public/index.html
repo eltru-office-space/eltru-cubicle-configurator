@@ -526,6 +526,38 @@
     }
     .powered-by a { color: var(--accent); text-decoration: none; font-weight: 500; }
 
+    /* ── GLASS INCLUDED CARD (Knoll Reff auto-advance) ──────────── */
+    .glass-included-card {
+      background: var(--accent-light);
+      border: 1.5px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 28px 20px 22px;
+      text-align: center;
+    }
+    .gi-icon {
+      width: 44px; height: 44px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      margin: 0 auto 14px;
+    }
+    .gi-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .gi-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 18px; }
+    .gi-progress { height: 3px; background: rgba(28,59,42,.15); border-radius: 2px; overflow: hidden; }
+    .gi-progress-bar {
+      height: 100%; background: var(--accent); width: 0%;
+      animation: gi-fill 0.85s ease forwards;
+    }
+    @keyframes gi-fill { from { width: 0% } to { width: 100% } }
+
     /* ── MOBILE ──────────────────────────────────────────────────── */
     @media (max-width: 768px) {
       :root { --panel-w: 100%; }
@@ -821,6 +853,14 @@ function renderStep(n) {
   updateSummary();
   document.getElementById('step-content').innerHTML = buildStep(n);
   document.getElementById('steps-scroll').scrollTop = 0;
+
+  // Knoll Reff: glass is always included — auto-complete step 7 and advance
+  if (n === 7 && state.brand?.slug === 'knoll-reff') {
+    state.glass = null;          // no selection needed
+    state.completedSteps.add(7);
+    updatePrice();
+    setTimeout(() => renderStep(8), 900);
+  }
 }
 
 function buildStep(n) {
@@ -834,7 +874,12 @@ function buildStep(n) {
     case 4: return hdr + heightHTML();
     case 5: return hdr + fabricHTML();
     case 6: return hdr + trimHTML();
-    case 7: return hdr + glassHTML();
+    case 7: {
+      const isKnoll = state.brand?.slug === 'knoll-reff';
+      const glassTitle = isKnoll ? 'Glass & worksurface' : 'Glass add-on';
+      const glassHdr = `<div class="step-label">Step ${n} of 9</div><div class="step-title">${glassTitle}</div>`;
+      return glassHdr + (isKnoll ? glassIncludedHTML() : glassHTML());
+    }
     case 8: return hdr + pedestalHTML();
     case 9: return hdr + clientHTML();
     default: return '';
@@ -958,6 +1003,16 @@ function trimHTML() {
       <div class="opt-name">${t.name}</div>
       <div class="opt-check"></div>
     </div>`).join('')}</div>`;
+}
+
+function glassIncludedHTML() {
+  return `
+    <div class="glass-included-card">
+      <div class="gi-icon">&#10003;</div>
+      <div class="gi-title">Glass included</div>
+      <div class="gi-desc">Knoll Reff comes with worksurface and glass panels as standard. No extra charge.</div>
+      <div class="gi-progress"><div class="gi-progress-bar"></div></div>
+    </div>`;
 }
 
 function glassHTML() {
@@ -1146,7 +1201,7 @@ const SUMMARY_KEYS = [
   ['Height',   s => s.height2 ? `${s.height?.label} / ${s.height2?.label}` : s.height?.label],
   ['Fabric',   s => s.fabric?.name],
   ['Trim',     s => s.trim?.name],
-  ['Glass',    s => s.glass?.name],
+  ['Glass',    s => s.brand?.slug === 'knoll-reff' ? 'Included standard' : s.glass?.name],
   ['Pedestal', s => s.pedestal?.name],
 ];
 
@@ -1218,8 +1273,8 @@ function updatePrice() {
         p.trim_id === state.trim.id
       )
     : null;
-  // Glass add-on — per-size for Steelcase; global for older rows
-  const glass = (state.glass && state.glass.slug !== 'none')
+  // Glass add-on — Steelcase Avenir only; Knoll Reff glass is always included at no charge
+  const glass = (state.brand?.slug !== 'knoll-reff' && state.glass && state.glass.slug !== 'none')
     ? options.pricing.find(p =>
         p.glass_id === state.glass.id &&
         (!p.size_id || p.size_id === state.size.id)
@@ -1425,7 +1480,7 @@ async function saveConfig() {
           p.trim_id === state.trim.id
         )
       : null;
-    const glass = (state.glass && state.glass.slug !== 'none')
+    const glass = (state.brand?.slug !== 'knoll-reff' && state.glass && state.glass.slug !== 'none')
       ? options.pricing.find(p =>
           p.glass_id === state.glass.id &&
           (!p.size_id || p.size_id === state.size?.id)
