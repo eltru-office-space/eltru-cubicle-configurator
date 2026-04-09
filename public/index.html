@@ -1171,21 +1171,68 @@ function updateSummary() {
 function updatePrice() {
   const badge  = document.getElementById('price-badge');
   const totEl  = document.getElementById('total-amount');
+  const unitRow = document.getElementById('unit-price-row');
+  const unitVal = document.getElementById('unit-price-val');
 
   if (!state.brand || !state.style) {
     badge.textContent = 'Configure to see pricing';
     badge.classList.remove('has-price');
     totEl.textContent = '—';
+    if (unitRow) unitRow.style.display = 'none';
     return;
   }
 
-  const base  = options.pricing.find(p => p.brand_id === state.brand.id && p.style_id === state.style.id);
-  const glass = (state.glass && state.glass.slug !== 'none')
-    ? options.pricing.find(p => p.glass_id === state.glass.id) : null;
-  const ped   = (state.pedestal && state.pedestal.slug !== 'none')
-    ? options.pricing.find(p => p.pedestal_id === state.pedestal.id) : null;
+  if (!state.size) {
+    badge.textContent = 'Select a size';
+    badge.classList.remove('has-price');
+    totEl.textContent = '—';
+    if (unitRow) unitRow.style.display = 'none';
+    updateSpecPill();
+    return;
+  }
 
-  const unit  = (base?.price_usd || 0) + (glass?.price_usd || 0) + (ped?.price_usd || 0);
+  // Base price — must match brand + style + size (no other FK columns set)
+  const base = options.pricing.find(p =>
+    p.brand_id === state.brand.id && p.style_id === state.style.id &&
+    p.size_id  === state.size.id  &&
+    !p.height_id && !p.fabric_id && !p.trim_id && !p.glass_id && !p.pedestal_id
+  );
+  // Height add-on — only the tall height has a pricing row
+  const heightAddon = state.height
+    ? options.pricing.find(p =>
+        p.brand_id === state.brand.id && p.style_id === state.style.id &&
+        p.size_id  === state.size.id  && p.height_id === state.height.id
+      )
+    : null;
+  // Fabric add-on
+  const fabricAddon = state.fabric
+    ? options.pricing.find(p =>
+        p.brand_id === state.brand.id && p.style_id === state.style.id &&
+        p.fabric_id === state.fabric.id
+      )
+    : null;
+  // Trim add-on
+  const trimAddon = state.trim
+    ? options.pricing.find(p =>
+        p.brand_id === state.brand.id && p.style_id === state.style.id &&
+        p.trim_id === state.trim.id
+      )
+    : null;
+  // Glass add-on — per-size for Steelcase; global for older rows
+  const glass = (state.glass && state.glass.slug !== 'none')
+    ? options.pricing.find(p =>
+        p.glass_id === state.glass.id &&
+        (!p.size_id || p.size_id === state.size.id)
+      )
+    : null;
+  // Pedestal add-on
+  const ped = (state.pedestal && state.pedestal.slug !== 'none')
+    ? options.pricing.find(p => p.pedestal_id === state.pedestal.id)
+    : null;
+
+  const unit  = (base?.price_usd || 0) + (heightAddon?.price_usd || 0) +
+                (fabricAddon?.price_usd || 0) + (trimAddon?.price_usd || 0) +
+                (glass?.price_usd || 0) + (ped?.price_usd || 0);
   const total = unit * state.qty;
   const fmt   = v => '$' + v.toLocaleString('en-US');
 
@@ -1193,8 +1240,6 @@ function updatePrice() {
   badge.classList.add('has-price');
   totEl.textContent = fmt(total);
 
-  const unitRow = document.getElementById('unit-price-row');
-  const unitVal = document.getElementById('unit-price-val');
   if (unitRow && unitVal && unit > 0) {
     unitVal.textContent = fmt(unit);
     unitRow.style.display = '';
@@ -1327,6 +1372,14 @@ function applyLayers() {
   setLayer('layer-trim',     trimUrl);
   setLayer('layer-glass',    glassUrl);
   setLayer('layer-pedestal', pedUrl);
+
+  // Show real image layers and hide SVG placeholder when real assets exist;
+  // fall back to SVG when no images have been uploaded yet.
+  const hasRealImages = Object.keys(cache).some(k => {
+    const v = cache[k];
+    return typeof v === 'string' ? Boolean(v) : (v && Object.values(v).some(Boolean));
+  });
+  document.getElementById('svg-wrap').style.display = hasRealImages ? 'none' : '';
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -1349,12 +1402,41 @@ async function saveConfig() {
   btn.textContent  = 'Saving\u2026';
 
   try {
-    const base  = options.pricing.find(p => p.brand_id === state.brand.id && p.style_id === state.style.id);
+    const base = options.pricing.find(p =>
+      p.brand_id === state.brand.id && p.style_id === state.style.id &&
+      p.size_id  === state.size?.id  &&
+      !p.height_id && !p.fabric_id && !p.trim_id && !p.glass_id && !p.pedestal_id
+    );
+    const heightAddon = state.height
+      ? options.pricing.find(p =>
+          p.brand_id === state.brand.id && p.style_id === state.style.id &&
+          p.size_id  === state.size?.id  && p.height_id === state.height.id
+        )
+      : null;
+    const fabricAddon = state.fabric
+      ? options.pricing.find(p =>
+          p.brand_id === state.brand.id && p.style_id === state.style.id &&
+          p.fabric_id === state.fabric.id
+        )
+      : null;
+    const trimAddon = state.trim
+      ? options.pricing.find(p =>
+          p.brand_id === state.brand.id && p.style_id === state.style.id &&
+          p.trim_id === state.trim.id
+        )
+      : null;
     const glass = (state.glass && state.glass.slug !== 'none')
-      ? options.pricing.find(p => p.glass_id === state.glass.id) : null;
-    const ped   = (state.pedestal && state.pedestal.slug !== 'none')
-      ? options.pricing.find(p => p.pedestal_id === state.pedestal.id) : null;
-    const unit  = (base?.price_usd || 0) + (glass?.price_usd || 0) + (ped?.price_usd || 0);
+      ? options.pricing.find(p =>
+          p.glass_id === state.glass.id &&
+          (!p.size_id || p.size_id === state.size?.id)
+        )
+      : null;
+    const ped = (state.pedestal && state.pedestal.slug !== 'none')
+      ? options.pricing.find(p => p.pedestal_id === state.pedestal.id)
+      : null;
+    const unit = (base?.price_usd || 0) + (heightAddon?.price_usd || 0) +
+                 (fabricAddon?.price_usd || 0) + (trimAddon?.price_usd || 0) +
+                 (glass?.price_usd || 0) + (ped?.price_usd || 0);
 
     const res = await fetch('/api/configs', {
       method:  'POST',
