@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Eltru Quote PDF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,8 +41,8 @@
     .header-left { display: flex; flex-direction: column; gap: 3px; }
 
     .logo {
-      font-family: Georgia, 'Times New Roman', serif;
-      font-size: 22px;
+      font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+      font-size: 32px;
       font-weight: 700;
       letter-spacing: 0.06em;
       color: #1C3B2A;
@@ -86,7 +88,7 @@
     /* ── VISUAL BOX ──────────────────────────────────────── */
     .visual-box {
       height: 230px;
-      background: #EAE6DF;
+      background: #ffffff;
       position: relative;
       display: flex;
       align-items: center;
@@ -236,7 +238,7 @@
       <div class="logo-sub">Cubicle Configuration</div>
     </div>
     <div class="header-right">
-      <div class="config-code" id="hdr-code">ELT-XXXX</div>
+      <div class="config-code" id="hdr-code"></div>
       <div id="qr-wrap"></div>
     </div>
   </div>
@@ -299,7 +301,7 @@
   <div class="footer">
     <div class="footer-left">
       <strong>eltru.com</strong> &nbsp;·&nbsp; Long Island, NY &nbsp;·&nbsp; hello@eltru.com<br>
-      All prices in USD. Quote valid for 30 days unless otherwise stated. Subject to availability.
+      All prices in USD. Subject to availability. Generated: <span id="gen-date"></span>
     </div>
     <div class="footer-badge">Eltru &trade;</div>
   </div>
@@ -326,8 +328,10 @@
   const pricing = optionsRes.pricing || [];
   const quote   = quoteRes?.success ? quoteRes.quote : null;
 
-  // ── Config code header ────────────────────────────────────
+  // ── Config code header + generated date ──────────────────
   document.getElementById('hdr-code').textContent = config.config_code;
+  document.getElementById('gen-date').textContent =
+    new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
   // ── QR code ───────────────────────────────────────────────
   const BASE = window.location.origin;
@@ -427,12 +431,17 @@
   const totalPrice = unitPrice * qty;
   const fmt = v => '$' + v.toLocaleString('en-US');
 
+  const originalUnitPrice = basePrice + glassPrice + pedPrice;
+
   let pricingHTML = '';
   if (!quote?.custom_price_usd) {
     pricingHTML += priceRow('Base configuration', fmt(basePrice));
     if (glassPrice) pricingHTML += priceRow(`Glass (${config.glass?.name})`, `+${fmt(glassPrice)}`);
     if (pedPrice)   pricingHTML += priceRow(`Pedestal`, `+${fmt(pedPrice)}`);
-    if (quote?.discount_pct) pricingHTML += priceRow(`Discount (${quote.discount_pct}%)`, `−${fmt(unitPrice - (basePrice + glassPrice + pedPrice) + (basePrice + glassPrice + pedPrice) * quote.discount_pct / 100)}`);
+    if (quote?.discount_pct) pricingHTML += priceRow(`Discount (${quote.discount_pct}%)`, `−${fmt(Math.round(originalUnitPrice * quote.discount_pct / 100))}`);
+  }
+  if (quote?.custom_price_usd && originalUnitPrice && originalUnitPrice !== unitPrice) {
+    pricingHTML += `<div class="price-row"><span class="p-label">List price</span><span class="p-val" style="text-decoration:line-through;color:#9A9488">${fmt(originalUnitPrice)}</span></div>`;
   }
   pricingHTML += priceRow('Unit price', fmt(unitPrice));
   pricingHTML += priceRow(`Quantity`, `× ${qty}`);

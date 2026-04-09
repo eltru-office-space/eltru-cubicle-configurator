@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { supabaseAdmin } = require('../lib/supabase');
 const { nanoid } = require('nanoid');
+const { sendQuoteAcceptedEmail, sendQuoteLinkEmail } = require('../lib/email');
 
 // POST /api/quotes — create a shareable quote link
 router.post('/', async (req, res) => {
@@ -170,9 +171,98 @@ router.post('/:token/accept', async (req, res) => {
 
     if (updateErr) throw updateErr;
 
+    // Send acceptance emails non-blocking
+    supabaseAdmin.from('quote_links').select('*').eq('link_token', token).single()
+      .then(async ({ data: quote }) => {
+        if (!quote) return;
+        const { data: config } = await supabaseAdmin
+          .from('configurations').select('*').eq('id', quote.config_id).single();
+        if (!config) return;
+        const lookups = await Promise.all([
+          config.brand_id  ? supabaseAdmin.from('brands').select('id,name').eq('id', config.brand_id).single()    : null,
+          config.style_id  ? supabaseAdmin.from('styles').select('id,name').eq('id', config.style_id).single()    : null,
+          config.size_id   ? supabaseAdmin.from('sizes').select('id,label').eq('id', config.size_id).single()     : null,
+          config.height_id ? supabaseAdmin.from('heights').select('id,label').eq('id', config.height_id).single() : null,
+          config.height_id_2 ? supabaseAdmin.from('heights').select('id,label').eq('id', config.height_id_2).single() : null,
+          config.fabric_id ? supabaseAdmin.from('fabrics').select('id,name').eq('id', config.fabric_id).single()  : null,
+          config.trim_id   ? supabaseAdmin.from('trims').select('id,name').eq('id', config.trim_id).single()      : null,
+          config.glass_id  ? supabaseAdmin.from('glass_options').select('id,name').eq('id', config.glass_id).single() : null,
+          config.pedestal_id ? supabaseAdmin.from('pedestals').select('id,name').eq('id', config.pedestal_id).single() : null,
+        ]);
+        const [brandR, styleR, sizeR, heightR, height2R, fabricR, trimR, glassR, pedestalR] = lookups;
+        const enriched = {
+          ...config,
+          brand: brandR?.data || null, style: styleR?.data || null,
+          size: sizeR?.data || null,   height: heightR?.data || null,
+          height_2: height2R?.data || null,
+          fabric: fabricR?.data || null, trim: trimR?.data || null,
+          glass: glassR?.data || null,  pedestal: pedestalR?.data || null,
+        };
+        sendQuoteAcceptedEmail(quote, enriched)
+          .catch(err => console.error('[email] sendQuoteAcceptedEmail error:', err.message));
+      })
+      .catch(err => console.error('[email] accept email fetch error:', err.message));
+
     res.json({ success: true });
   } catch (err) {
     console.error('POST /api/quotes/:token/accept error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/quotes/:token/send-email — send quote link to an email address
+router.post('/:token/send-email', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { email } = req.body;
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ success: false, error: 'A valid email address is required' });
+    }
+
+    const { data: quote, error } = await supabaseAdmin
+      .from('quote_links').select('*').eq('link_token', token).single();
+
+    if (error || !quote) {
+      return res.status(404).json({ success: false, error: 'Quote not found' });
+    }
+    if (!quote.is_active) {
+      return res.status(410).json({ success: false, error: 'quote_inactive' });
+    }
+
+    const { data: config } = await supabaseAdmin
+      .from('configurations').select('*').eq('id', quote.config_id).single();
+
+    if (!config) {
+      return res.status(404).json({ success: false, error: 'Configuration not found' });
+    }
+
+    const lookups = await Promise.all([
+      config.brand_id  ? supabaseAdmin.from('brands').select('id,name').eq('id', config.brand_id).single()    : null,
+      config.style_id  ? supabaseAdmin.from('styles').select('id,name').eq('id', config.style_id).single()    : null,
+      config.size_id   ? supabaseAdmin.from('sizes').select('id,label').eq('id', config.size_id).single()     : null,
+      config.height_id ? supabaseAdmin.from('heights').select('id,label').eq('id', config.height_id).single() : null,
+      config.height_id_2 ? supabaseAdmin.from('heights').select('id,label').eq('id', config.height_id_2).single() : null,
+      config.fabric_id ? supabaseAdmin.from('fabrics').select('id,name').eq('id', config.fabric_id).single()  : null,
+      config.trim_id   ? supabaseAdmin.from('trims').select('id,name').eq('id', config.trim_id).single()      : null,
+      config.glass_id  ? supabaseAdmin.from('glass_options').select('id,name').eq('id', config.glass_id).single() : null,
+      config.pedestal_id ? supabaseAdmin.from('pedestals').select('id,name').eq('id', config.pedestal_id).single() : null,
+    ]);
+    const [brandR, styleR, sizeR, heightR, height2R, fabricR, trimR, glassR, pedestalR] = lookups;
+    const enriched = {
+      ...config,
+      brand: brandR?.data || null, style: styleR?.data || null,
+      size: sizeR?.data || null,   height: heightR?.data || null,
+      height_2: height2R?.data || null,
+      fabric: fabricR?.data || null, trim: trimR?.data || null,
+      glass: glassR?.data || null,  pedestal: pedestalR?.data || null,
+    };
+
+    await sendQuoteLinkEmail(quote, enriched, email);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('POST /api/quotes/:token/send-email error:', err.message);
     res.status(500).json({ success: false, error: err.message });
   }
 });

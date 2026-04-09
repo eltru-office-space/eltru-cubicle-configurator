@@ -8,9 +8,10 @@ The Eltru Configurator is a web-based cubicle configuration and quoting system f
 
 - **Backend:** Node.js + Express
 - **Database:** Supabase (PostgreSQL)
-- **PDF Generation:** Puppeteer (planned for Session 3)
+- **PDF Generation:** Puppeteer Core + `@sparticuz/chromium` (Linux/Railway), system Chrome (macOS dev)
+- **Email:** Resend SDK (`lib/email.js`) — falls back to console.log if `RESEND_API_KEY` not set
 - **Frontend:** Vanilla HTML/CSS/JS (served as static files)
-- **Deployment:** TBD
+- **Deployment:** Railway (auto-deploy from GitHub)
 
 ## How to Run
 
@@ -39,6 +40,8 @@ Server runs on PORT from `.env` (default 3000).
 | `ADMIN_PASSWORD` | Password for admin API routes |
 | `PORT` | Port to run Express on (default: 3000) |
 | `BASE_URL` | Full base URL for generating share links (e.g. http://localhost:3000) |
+| `RESEND_API_KEY` | Resend API key for transactional emails (optional — falls back to console.log) |
+| `ELTRU_EMAIL` | Internal notification email address (default: hello@eltru.com) |
 
 ## Supabase Table Structure
 
@@ -70,15 +73,41 @@ Server runs on PORT from `.env` (default 3000).
 | Method | Path | Description |
 |---|---|---|
 | GET | /health | Health check |
-| POST | /api/configs | Save a new configuration |
-| GET | /api/configs/:code | Load config by code |
+| GET | /api/options | All product options in one call |
+| GET | /api/layers | Layer image lookup (bulk or single) |
+| POST | /api/configs | Save a new configuration (fires email) |
+| GET | /api/configs/:code | Load config by code (enriched) |
 | POST | /api/quotes | Create a quote link |
 | GET | /api/quotes/:token | Load quote by token |
-| POST | /api/pdf | Generate PDF |
+| POST | /api/quotes/:token/accept | Client accepts quote (fires email) |
+| POST | /api/quotes/:token/send-email | Email quote link to a recipient |
+| POST | /api/pdf | Generate and return PDF binary |
+| POST | /api/auth/sales | Sales password check |
+| POST | /api/auth/admin | Admin password check |
 | GET | /api/admin/layers | List layer assets |
-| POST | /api/admin/layers | Add layer asset |
-| GET | /api/admin/configs | Recent configurations |
+| POST | /api/admin/layers/upload | Upload layer image |
+| DELETE | /api/admin/layers/:id | Delete layer asset |
+| GET | /api/admin/configs | All configurations (admin) |
 | GET | /api/admin/pricing | All pricing rows |
+| PUT | /api/admin/pricing/:id | Update a pricing row |
+
+## Rate Limits
+
+| Route | Window | Max requests |
+|---|---|---|
+| POST /api/configs | 1 hour | 10 |
+| POST /api/pdf | 1 hour | 5 |
+| POST /api/auth/* | 15 min | 10 |
+
+## Email System (`lib/email.js`)
+
+Three exported functions, all non-blocking (errors logged, never thrown):
+
+- `sendConfigSavedEmail(config)` — fires after config saved; sends to client (if email provided) and Eltru team
+- `sendQuoteAcceptedEmail(quote, config)` — fires when client accepts quote; red "Action Needed" header to team
+- `sendQuoteLinkEmail(quote, config, recipientEmail)` — called by `POST /api/quotes/:token/send-email`
+
+All require `RESEND_API_KEY` env var. Without it, mocked to console.log.
 
 ## Config Codes
 
@@ -86,11 +115,15 @@ Config codes use the format `ELT-XXXX` where X is an uppercase letter or number,
 
 ## 6-Session Build Plan
 
-| Session | Focus |
-|---|---|
-| 1 | Project foundation — Express server, Supabase client, routes, config codes |
-| 2 | Supabase integration — full CRUD for configs and quotes, option lookups |
-| 3 | PDF generation — Puppeteer, quote PDF layout |
-| 4 | Frontend configurator — layer-based visual builder (canvas/img layers) |
-| 5 | Admin panel — pricing management, layer asset uploads |
-| 6 | Polish, testing, deployment |
+| Session | Focus | Status |
+|---|---|---|
+| 1 | Project foundation — Express server, Supabase client, routes, config codes | ✓ Done |
+| 2 | Supabase integration — full CRUD for configs and quotes, option lookups | ✓ Done |
+| 3 | PDF generation — Puppeteer, quote PDF layout | ✓ Done |
+| 4 | Frontend configurator — layer-based visual builder (canvas/img layers) | ✓ Done |
+| 5 | Client capture (Step 9), Resend email, PDF polish, rate limiting, admin improvements | ✓ Done |
+| 6 | Final polish, testing, deployment | — |
+
+## Live URL
+
+https://eltru-cubicle-configurator-production.up.railway.app

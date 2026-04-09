@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { supabaseAdmin } = require('../lib/supabase');
 const { generateConfigCode } = require('../lib/configCode');
+const { sendConfigSavedEmail } = require('../lib/email');
 
 // POST /api/configs — save a new configuration
 router.post('/', async (req, res) => {
@@ -14,6 +15,18 @@ router.post('/', async (req, res) => {
       client_name, client_email, client_company, notes,
       created_by, session_id,
     } = req.body;
+
+    // Input validation
+    const qty = parseInt(quantity, 10);
+    if (quantity !== undefined && (isNaN(qty) || qty < 1 || qty > 500)) {
+      return res.status(400).json({ success: false, error: 'quantity must be an integer between 1 and 500' });
+    }
+    if (client_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(client_email)) {
+      return res.status(400).json({ success: false, error: 'client_email is not a valid email address' });
+    }
+    if (notes && notes.length > 1000) {
+      return res.status(400).json({ success: false, error: 'notes must be 1000 characters or fewer' });
+    }
 
     // Generate a unique config code (retry on collision)
     let config_code;
@@ -45,6 +58,33 @@ router.post('/', async (req, res) => {
 
     const BASE_URL = process.env.BASE_URL || 'http://localhost:3000';
     const share_url = `${BASE_URL}/?config=${data.config_code}`;
+
+    // Fire email non-blocking — fetch enriched config for template fields
+    supabaseAdmin.from('configurations').select('*').eq('id', data.id).single()
+      .then(async ({ data: savedConfig }) => {
+        if (!savedConfig) return;
+        const lookups = await Promise.all([
+          savedConfig.brand_id  ? supabaseAdmin.from('brands').select('id,name').eq('id', savedConfig.brand_id).single()    : null,
+          savedConfig.style_id  ? supabaseAdmin.from('styles').select('id,name').eq('id', savedConfig.style_id).single()    : null,
+          savedConfig.size_id   ? supabaseAdmin.from('sizes').select('id,label').eq('id', savedConfig.size_id).single()     : null,
+          savedConfig.height_id ? supabaseAdmin.from('heights').select('id,label').eq('id', savedConfig.height_id).single() : null,
+          savedConfig.height_id_2 ? supabaseAdmin.from('heights').select('id,label').eq('id', savedConfig.height_id_2).single() : null,
+          savedConfig.fabric_id ? supabaseAdmin.from('fabrics').select('id,name').eq('id', savedConfig.fabric_id).single()  : null,
+          savedConfig.trim_id   ? supabaseAdmin.from('trims').select('id,name').eq('id', savedConfig.trim_id).single()      : null,
+          savedConfig.glass_id  ? supabaseAdmin.from('glass_options').select('id,name').eq('id', savedConfig.glass_id).single() : null,
+          savedConfig.pedestal_id ? supabaseAdmin.from('pedestals').select('id,name').eq('id', savedConfig.pedestal_id).single() : null,
+        ]);
+        const [brandR, styleR, sizeR, heightR, height2R, fabricR, trimR, glassR, pedestalR] = lookups;
+        sendConfigSavedEmail({
+          ...savedConfig,
+          brand: brandR?.data || null, style: styleR?.data || null,
+          size: sizeR?.data || null,   height: heightR?.data || null,
+          height_2: height2R?.data || null,
+          fabric: fabricR?.data || null, trim: trimR?.data || null,
+          glass: glassR?.data || null,  pedestal: pedestalR?.data || null,
+        }).catch(err => console.error('[email] sendConfigSavedEmail error:', err.message));
+      })
+      .catch(err => console.error('[email] config fetch error:', err.message));
 
     res.json({ success: true, config_code: data.config_code, config_id: data.id, share_url });
   } catch (err) {

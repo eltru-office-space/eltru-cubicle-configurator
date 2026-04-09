@@ -105,7 +105,18 @@
   .layer-actions { padding:8px 12px; border-top:1px solid var(--border); display:flex; gap:8px; }
   .btn-del { padding:5px 12px; background:transparent; color:var(--err); border:1px solid var(--err); border-radius:6px; font-size:.72rem; font-weight:600; cursor:pointer; transition:all .15s; }
   .btn-del:hover { background:var(--err); color:#fff; }
+  .btn-replace { padding:5px 12px; background:transparent; color:var(--acc); border:1px solid var(--acc); border-radius:6px; font-size:.72rem; font-weight:600; cursor:pointer; transition:all .15s; }
+  .btn-replace:hover { background:var(--acc); color:#fff; }
+  .layer-filter-btn { padding:5px 12px; background:var(--bg); color:var(--muted); border:1px solid var(--border); border-radius:20px; font-size:.75rem; font-weight:600; cursor:pointer; transition:all .15s; }
+  .layer-filter-btn.active { background:var(--acc); color:#fff; border-color:var(--acc); }
   .layer-empty { color:var(--muted); font-size:.85rem; padding:16px 0; }
+  /* Coverage matrix */
+  .coverage-table { border-collapse:collapse; font-size:.8rem; min-width:400px; }
+  .coverage-table th, .coverage-table td { padding:7px 12px; border:1px solid var(--border); text-align:center; }
+  .coverage-table th { background:var(--bg); font-weight:600; color:var(--muted); white-space:nowrap; }
+  .coverage-table td:first-child { text-align:left; font-weight:500; color:var(--text); }
+  .cov-yes { color:#1C3B2A; font-weight:700; }
+  .cov-no  { color:#ccc; }
 
   /* ── Pricing table ── */
   table { width:100%; border-collapse:collapse; }
@@ -267,9 +278,27 @@
       <div id="upload-msg"></div>
     </div>
 
+    <div style="margin:12px 0 6px;display:flex;gap:6px;flex-wrap:wrap" id="layer-type-filters">
+      <button class="layer-filter-btn active" onclick="setLayerFilter(null, this)">All</button>
+      <button class="layer-filter-btn" onclick="setLayerFilter('background', this)">background</button>
+      <button class="layer-filter-btn" onclick="setLayerFilter('panel', this)">panel</button>
+      <button class="layer-filter-btn" onclick="setLayerFilter('trim', this)">trim</button>
+      <button class="layer-filter-btn" onclick="setLayerFilter('glass', this)">glass</button>
+      <button class="layer-filter-btn" onclick="setLayerFilter('pedestal', this)">pedestal</button>
+      <button class="layer-filter-btn" onclick="setLayerFilter('worksurface', this)">worksurface</button>
+    </div>
+
     <div id="layers-grid-wrap">
       <div style="color:var(--muted); font-size:.9rem; padding:8px 0;">
         <span class="inline-spinner"></span> Loading layers…
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:20px">
+      <div class="card-title">Coverage Matrix</div>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Which layer types have been uploaded for each brand &amp; style combination.</p>
+      <div id="coverage-matrix-wrap" style="overflow-x:auto">
+        <div style="color:var(--muted);font-size:.85rem">Loading…</div>
       </div>
     </div>
   </div>
@@ -303,8 +332,11 @@
 
   <!-- ── TAB 3: CONFIGURATIONS ── -->
   <div id="tab-configs" class="tab-panel">
-    <div class="search-row">
+    <div class="search-row" style="flex-wrap:wrap;gap:8px">
       <input type="text" id="config-search" class="search-input" placeholder="Search by code or client…" oninput="filterConfigs()">
+      <input type="date" id="config-date-from" class="search-input" style="width:150px" onchange="filterConfigs()" title="From date">
+      <input type="date" id="config-date-to"   class="search-input" style="width:150px" onchange="filterConfigs()" title="To date">
+      <button onclick="exportConfigsCSV()" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap">↓ Export CSV</button>
       <span class="count-badge" id="config-count"></span>
     </div>
     <div class="card" style="padding:0; overflow:hidden;">
@@ -350,6 +382,7 @@ let OPTIONS    = null;   // from /api/options
 let ALL_LAYERS = [];     // from /api/admin/layers
 let ALL_CONFIGS = [];
 let allConfigsRaw = [];
+let layerTypeFilter = null;  // null = all
 
 // ── Gate ──────────────────────────────────────────────────────────────────
 document.getElementById('gate-pw').addEventListener('keydown', e => {
@@ -397,6 +430,8 @@ function logout() {
 // ── Load everything ────────────────────────────────────────────────────────
 async function loadAll() {
   await Promise.all([loadOptions(), loadLayers(), loadConfigs(), loadPricing()]);
+  // Coverage matrix needs both OPTIONS and ALL_LAYERS
+  renderCoverageMatrix();
 }
 
 async function loadOptions() {
@@ -441,6 +476,7 @@ async function loadLayers() {
     ALL_LAYERS = data.layers || [];
     renderLayerStats();
     renderLayerGrid();
+    renderCoverageMatrix();
   } catch (err) {
     document.getElementById('layers-grid-wrap').innerHTML =
       `<div class="msg-err">Failed to load layers: ${err.message}</div>`;
@@ -453,13 +489,27 @@ function renderLayerStats() {
   document.getElementById('stat-types').textContent = types.size;
 }
 
+function setLayerFilter(type, btn) {
+  layerTypeFilter = type;
+  document.querySelectorAll('.layer-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLayerGrid();
+}
+
 function renderLayerGrid() {
   const wrap = document.getElementById('layers-grid-wrap');
-  if (!ALL_LAYERS.length) { wrap.innerHTML = '<div class="empty-state">No layers uploaded yet.</div>'; return; }
+  const layers = layerTypeFilter
+    ? ALL_LAYERS.filter(l => l.layer_type === layerTypeFilter)
+    : ALL_LAYERS;
 
-  // Group by brand_id → style_id → layer_type
+  if (!layers.length) {
+    wrap.innerHTML = `<div class="empty-state">No ${layerTypeFilter ? `"${layerTypeFilter}" ` : ''}layers uploaded yet.</div>`;
+    return;
+  }
+
+  // Group by brand_id → style_id
   const groups = {};
-  for (const l of ALL_LAYERS) {
+  for (const l of layers) {
     const key = `${l.brand_id}__${l.style_id}`;
     if (!groups[key]) groups[key] = { brand_id: l.brand_id, style_id: l.style_id, layers: [] };
     groups[key].layers.push(l);
@@ -473,6 +523,7 @@ function renderLayerGrid() {
     html += '<div class="layer-grid">';
     for (const l of g.layers) {
       const optLabel = resolveOptionLabel(l);
+      const layerDataAttr = `data-brand-id="${l.brand_id}" data-style-id="${l.style_id}" data-layer-type="${l.layer_type}" data-fabric-id="${l.fabric_id||''}" data-trim-id="${l.trim_id||''}" data-glass-id="${l.glass_id||''}" data-pedestal-id="${l.pedestal_id||''}"`;
       html += `
         <div class="layer-card" id="layer-card-${l.id}">
           <img class="layer-thumb" src="${l.storage_url}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
@@ -482,6 +533,7 @@ function renderLayerGrid() {
             <div class="layer-meta">${optLabel ? optLabel : (l.storage_path || '')}</div>
           </div>
           <div class="layer-actions">
+            <button class="btn-replace" onclick="replaceLayer('${l.id}', this)" ${layerDataAttr}>Replace</button>
             <button class="btn-del" onclick="deleteLayer('${l.id}','${escHtml(l.storage_path || '')}')">Delete</button>
           </div>
         </div>`;
@@ -490,6 +542,98 @@ function renderLayerGrid() {
   }
 
   wrap.innerHTML = html;
+}
+
+function renderCoverageMatrix() {
+  const wrap = document.getElementById('coverage-matrix-wrap');
+  if (!OPTIONS || !ALL_LAYERS.length) {
+    wrap.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Upload layers to see coverage.</div>';
+    return;
+  }
+
+  const TYPES = ['background','panel','trim','glass','pedestal','worksurface'];
+
+  // Build set of covered combos: "brandId__styleId__layerType"
+  const covered = new Set(ALL_LAYERS.map(l => `${l.brand_id}__${l.style_id}__${l.layer_type}`));
+
+  let html = `<table class="coverage-table"><thead><tr><th>Brand / Style</th>`;
+  for (const t of TYPES) html += `<th>${t}</th>`;
+  html += '</tr></thead><tbody>';
+
+  for (const brand of (OPTIONS.brands || [])) {
+    for (const style of (brand.styles || [])) {
+      html += `<tr><td>${brand.name} — ${style.name}</td>`;
+      for (const t of TYPES) {
+        const has = covered.has(`${brand.id}__${style.id}__${t}`);
+        html += `<td class="${has ? 'cov-yes' : 'cov-no'}">${has ? '✓' : '·'}</td>`;
+      }
+      html += '</tr>';
+    }
+  }
+
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function replaceLayer(layerId, btn) {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.webp,.png,image/webp,image/png';
+  inp.onchange = async () => {
+    const file = inp.files[0];
+    if (!file) return;
+
+    // Read layer context from data attributes on the button
+    const brandId    = btn.getAttribute('data-brand-id');
+    const styleId    = btn.getAttribute('data-style-id');
+    const layerType  = btn.getAttribute('data-layer-type');
+    const fabricId   = btn.getAttribute('data-fabric-id');
+    const trimId     = btn.getAttribute('data-trim-id');
+    const glassId    = btn.getAttribute('data-glass-id');
+    const pedestalId = btn.getAttribute('data-pedestal-id');
+
+    // Resolve slugs
+    const brand   = OPTIONS?.brands?.find(b => b.id === brandId);
+    const style   = brand?.styles?.find(s => s.id === styleId);
+    const fabric  = fabricId   ? OPTIONS?.fabrics?.find(f => f.id === fabricId)        : null;
+    const trim    = trimId     ? OPTIONS?.trims?.find(t => t.id === trimId)            : null;
+    const glass   = glassId    ? OPTIONS?.glass_options?.find(g => g.id === glassId)   : null;
+    const pedestal= pedestalId ? OPTIONS?.pedestals?.find(p => p.id === pedestalId)    : null;
+    const option  = fabric || trim || glass || pedestal;
+
+    if (!brand || !style) { toast('Cannot resolve brand/style for this layer', false); return; }
+
+    btn.disabled = true; btn.textContent = 'Uploading…';
+
+    const fd = new FormData();
+    fd.append('file',        file);
+    fd.append('brand_slug',  brand.slug);
+    fd.append('style_slug',  style.slug);
+    fd.append('layer_type',  layerType);
+    fd.append('option_slug', option?.slug || '');
+
+    try {
+      const res  = await fetch('/api/admin/layers/upload', {
+        method: 'POST',
+        headers: { 'Authorization': adminPw },
+        body: fd,
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      // Update thumbnail
+      const card = document.getElementById(`layer-card-${layerId}`);
+      if (card) {
+        const img = card.querySelector('.layer-thumb');
+        if (img) { img.style.display = ''; img.src = data.storage_url + '?t=' + Date.now(); }
+      }
+      toast('Layer replaced');
+    } catch (err) {
+      toast('Replace failed: ' + err.message, false);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Replace';
+    }
+  };
+  inp.click();
 }
 
 function resolveOptionLabel(l) {
@@ -733,14 +877,61 @@ async function loadConfigs() {
 }
 
 function filterConfigs() {
-  const q = document.getElementById('config-search').value.toLowerCase().trim();
-  const filtered = q
-    ? allConfigsRaw.filter(c =>
-        c.config_code?.toLowerCase().includes(q) ||
-        c.client_name?.toLowerCase().includes(q) ||
-        c.client_company?.toLowerCase().includes(q))
-    : allConfigsRaw;
+  const q        = document.getElementById('config-search').value.toLowerCase().trim();
+  const dateFrom = document.getElementById('config-date-from').value;
+  const dateTo   = document.getElementById('config-date-to').value;
+
+  let filtered = allConfigsRaw;
+
+  if (q) {
+    filtered = filtered.filter(c =>
+      c.config_code?.toLowerCase().includes(q) ||
+      c.client_name?.toLowerCase().includes(q) ||
+      c.client_company?.toLowerCase().includes(q));
+  }
+  if (dateFrom) {
+    const from = new Date(dateFrom);
+    filtered = filtered.filter(c => new Date(c.created_at) >= from);
+  }
+  if (dateTo) {
+    const to = new Date(dateTo);
+    to.setHours(23, 59, 59, 999);
+    filtered = filtered.filter(c => new Date(c.created_at) <= to);
+  }
+
   renderConfigsTable(filtered);
+}
+
+function exportConfigsCSV() {
+  const q        = document.getElementById('config-search').value.toLowerCase().trim();
+  const dateFrom = document.getElementById('config-date-from').value;
+  const dateTo   = document.getElementById('config-date-to').value;
+
+  let rows = allConfigsRaw;
+  if (q) rows = rows.filter(c =>
+    c.config_code?.toLowerCase().includes(q) ||
+    c.client_name?.toLowerCase().includes(q) ||
+    c.client_company?.toLowerCase().includes(q));
+  if (dateFrom) { const f = new Date(dateFrom); rows = rows.filter(c => new Date(c.created_at) >= f); }
+  if (dateTo)   { const t = new Date(dateTo); t.setHours(23,59,59,999); rows = rows.filter(c => new Date(c.created_at) <= t); }
+
+  const cols = ['config_code','client_name','client_email','client_company','quantity','base_price_usd','total_price_usd','notes','created_at'];
+  const header = cols.join(',');
+  const body = rows.map(r =>
+    cols.map(k => {
+      const v = r[k] ?? '';
+      return `"${String(v).replace(/"/g, '""')}"`;
+    }).join(',')
+  ).join('\n');
+
+  const blob = new Blob([header + '\n' + body], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = `eltru-configs-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast(`Exported ${rows.length} rows`);
 }
 
 function renderConfigsTable(configs) {

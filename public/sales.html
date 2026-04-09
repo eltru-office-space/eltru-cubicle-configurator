@@ -755,6 +755,18 @@
                       + Generate Another
                     </button>
                   </div>
+                  <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.2)">
+                    <div style="font-size:0.75rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;opacity:0.7;margin-bottom:8px">Email quote to client</div>
+                    <div style="display:flex;gap:8px;align-items:center">
+                      <input type="email" id="send-email-input" placeholder="client@company.com"
+                        style="flex:1;padding:8px 11px;border-radius:6px;border:1.5px solid rgba(255,255,255,0.3);background:rgba(255,255,255,0.15);color:#fff;font-size:0.85rem;outline:none;">
+                      <button id="send-email-btn" onclick="sendQuoteEmail()"
+                        style="padding:8px 14px;background:rgba(255,255,255,0.25);border:1.5px solid rgba(255,255,255,0.5);color:#fff;border-radius:6px;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:background 0.15s">
+                        Send
+                      </button>
+                    </div>
+                    <div id="send-email-msg" style="display:none;margin-top:6px;font-size:0.78rem;opacity:0.85"></div>
+                  </div>
                   <div class="qlc-meta" id="qlc-meta"></div>
                 </div>
                 <div class="qlc-qr">
@@ -1005,7 +1017,11 @@ async function generateQuote() {
   }
 }
 
+let currentQuoteToken = null;
+
 function renderQuoteResult(data) {
+  currentQuoteToken = data.link_token;
+
   const shareUrl   = data.share_url;
   const expiresAt  = new Date(data.expires_at);
   const expiresStr = expiresAt.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -1014,6 +1030,12 @@ function renderQuoteResult(data) {
   document.getElementById('qlc-expiry').textContent = `Expires ${expiresStr}`;
   document.getElementById('qlc-preview-btn').href   = shareUrl;
   document.getElementById('qlc-meta').textContent   = `Token: ${data.link_token}`;
+
+  // Pre-fill email from loaded config if available
+  if (loadedConfig?.client_email) {
+    document.getElementById('send-email-input').value = loadedConfig.client_email;
+  }
+  document.getElementById('send-email-msg').style.display = 'none';
 
   // QR code
   const qrEl = document.getElementById('qlc-qr-canvas');
@@ -1034,6 +1056,38 @@ function showQuoteError(msg) {
   const el = document.getElementById('quote-form-error');
   el.textContent    = msg;
   el.style.display  = 'block';
+}
+
+async function sendQuoteEmail() {
+  if (!currentQuoteToken) return;
+  const email = document.getElementById('send-email-input').value.trim();
+  if (!email) { alert('Enter an email address.'); return; }
+
+  const btn = document.getElementById('send-email-btn');
+  const msg = document.getElementById('send-email-msg');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  msg.style.display = 'none';
+
+  try {
+    const res  = await fetch(`/api/quotes/${currentQuoteToken}/send-email`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Send failed');
+    msg.textContent   = `✓ Email sent to ${email}`;
+    msg.style.color   = 'rgba(255,255,255,0.9)';
+    msg.style.display = 'block';
+    btn.textContent   = 'Sent ✓';
+  } catch (err) {
+    msg.textContent   = `✗ ${err.message}`;
+    msg.style.color   = '#ffcccc';
+    msg.style.display = 'block';
+    btn.disabled      = false;
+    btn.textContent   = 'Send';
+  }
 }
 
 function copyLink() {

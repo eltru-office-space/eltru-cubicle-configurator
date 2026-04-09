@@ -457,6 +457,32 @@
     .config-code-val   { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--accent); letter-spacing: 0.06em; }
     .config-code-copy  { font-size: 11px; color: var(--accent); cursor: pointer; text-decoration: underline; white-space: nowrap; }
 
+    /* ── CLIENT FORM ─────────────────────────────────────────────── */
+    .client-form { display: flex; flex-direction: column; gap: 14px; }
+    .client-field { display: flex; flex-direction: column; gap: 5px; }
+    .client-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .client-input {
+      width: 100%;
+      padding: 10px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--white);
+      outline: none;
+      transition: border-color 0.15s ease;
+      resize: none;
+    }
+    .client-input:focus { border-color: var(--accent); }
+    .client-input::placeholder { color: var(--muted); }
+
     /* ── LOADING ─────────────────────────────────────────────────── */
     .loading-state {
       display: flex;
@@ -569,6 +595,10 @@
 
     <div class="summary-panel" id="summary-panel" style="display:none">
       <div class="summary-rows" id="summary-rows"></div>
+      <div class="summary-row" id="unit-price-row" style="display:none;margin-top:6px;padding-top:8px;border-top:1px solid var(--border)">
+        <span class="s-label">Unit price</span>
+        <span class="s-val" id="unit-price-val">—</span>
+      </div>
       <div class="qty-row">
         <span class="qty-label">Quantity</span>
         <div class="qty-control">
@@ -602,6 +632,7 @@ const state = {
   height: null, height2: null,
   fabric: null, trim: null, glass: null, pedestal: null,
   qty: 1,
+  clientName: '', clientEmail: '', clientCompany: '', clientNotes: '',
   currentStep: 1,
   completedSteps: new Set(),
   savedCode: null,
@@ -621,6 +652,7 @@ const STEP_TITLES = [
   'Trim color',
   'Glass add-on',
   'Pedestal storage',
+  'Your details',
 ];
 
 // ─────────────────────────────────────────────────────────────────
@@ -669,11 +701,15 @@ async function loadExistingConfig(code) {
     if (c.trim)     state.trim     = options.trims.find(t => t.id === c.trim.id)               || null;
     if (c.glass)    state.glass    = options.glass_options.find(g => g.id === c.glass.id)      || null;
     if (c.pedestal) state.pedestal = options.pedestals.find(p => p.id === c.pedestal.id)      || null;
-    state.qty       = c.quantity || 1;
+    state.qty          = c.quantity || 1;
+    state.clientName   = c.client_name    || '';
+    state.clientEmail  = c.client_email   || '';
+    state.clientCompany= c.client_company || '';
+    state.clientNotes  = c.notes          || '';
     state.savedCode = c.config_code;
     state.savedId   = c.id;
 
-    for (let i = 1; i <= 8; i++) state.completedSteps.add(i);
+    for (let i = 1; i <= 9; i++) state.completedSteps.add(i);
 
     renderStep(8);
     updateVisual();
@@ -697,7 +733,7 @@ function renderStep(n) {
 
 function buildStep(n) {
   const hdr = `
-    <div class="step-label">Step ${n} of 8</div>
+    <div class="step-label">Step ${n} of 9</div>
     <div class="step-title">${STEP_TITLES[n]}</div>`;
   switch (n) {
     case 1: return hdr + brandHTML();
@@ -708,6 +744,7 @@ function buildStep(n) {
     case 6: return hdr + trimHTML();
     case 7: return hdr + glassHTML();
     case 8: return hdr + pedestalHTML();
+    case 9: return hdr + clientHTML();
     default: return '';
   }
 }
@@ -863,6 +900,65 @@ function pedestalHTML() {
     </div>`).join('')}</div>`;
 }
 
+function clientHTML() {
+  const esc = s => (s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  return `
+    <div class="client-form">
+      <div class="client-field">
+        <label class="client-label">Full Name</label>
+        <input class="client-input" type="text" id="c-name" placeholder="Jane Smith" value="${esc(state.clientName)}">
+      </div>
+      <div class="client-field">
+        <label class="client-label">Email Address</label>
+        <input class="client-input" type="email" id="c-email" placeholder="jane@company.com" value="${esc(state.clientEmail)}">
+      </div>
+      <div class="client-field">
+        <label class="client-label">Company <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+        <input class="client-input" type="text" id="c-company" placeholder="Acme Corp" value="${esc(state.clientCompany)}">
+      </div>
+      <div class="client-field">
+        <label class="client-label">Notes <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+        <textarea class="client-input" id="c-notes" placeholder="Any special requirements…" rows="3">${esc(state.clientNotes)}</textarea>
+      </div>
+      <div style="margin-top:4px;display:flex;flex-direction:column;gap:8px">
+        <button class="btn btn-primary" onclick="submitClient()">Save &amp; Get Quote Code</button>
+        <button class="btn btn-secondary" onclick="skipClient()">Skip — save without details</button>
+      </div>
+    </div>`;
+}
+
+function submitClient() {
+  const name    = document.getElementById('c-name')?.value.trim()    || '';
+  const email   = document.getElementById('c-email')?.value.trim()   || '';
+  const company = document.getElementById('c-company')?.value.trim() || '';
+  const notes   = document.getElementById('c-notes')?.value.trim()   || '';
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    alert('Please enter a valid email address.');
+    return;
+  }
+  if (notes.length > 1000) {
+    alert('Notes must be 1000 characters or fewer.');
+    return;
+  }
+
+  state.clientName    = name;
+  state.clientEmail   = email;
+  state.clientCompany = company;
+  state.clientNotes   = notes;
+  state.completedSteps.add(9);
+  showActions();
+  saveConfig();
+}
+
+function skipClient() {
+  state.clientName = ''; state.clientEmail = '';
+  state.clientCompany = ''; state.clientNotes = '';
+  state.completedSteps.add(9);
+  showActions();
+  saveConfig();
+}
+
 // ─────────────────────────────────────────────────────────────────
 // SELECTION HANDLERS
 // ─────────────────────────────────────────────────────────────────
@@ -924,11 +1020,7 @@ function selectPedestal(id) {
   state.pedestal = options.pedestals.find(p => p.id == id) || null;
   state.completedSteps.add(8);
   updateVisual();
-  updateSummary();
-  updatePrice();
-  showActions();
-  // Re-render step 8 to show checkmark
-  document.getElementById('step-content').innerHTML = buildStep(8);
+  advance(9);
 }
 
 function advance(toStep) {
@@ -942,7 +1034,7 @@ function advance(toStep) {
 // ─────────────────────────────────────────────────────────────────
 function updateDots() {
   let html = '';
-  for (let i = 1; i <= 8; i++) {
+  for (let i = 1; i <= 9; i++) {
     let cls    = 'step-dot locked';
     let click  = '';
     if (i === state.currentStep) cls = 'step-dot active';
@@ -1008,11 +1100,19 @@ function updatePrice() {
   badge.textContent = `From ${fmt(unit)} / unit`;
   badge.classList.add('has-price');
   totEl.textContent = fmt(total);
+
+  const unitRow = document.getElementById('unit-price-row');
+  const unitVal = document.getElementById('unit-price-val');
+  if (unitRow && unitVal && unit > 0) {
+    unitVal.textContent = fmt(unit);
+    unitRow.style.display = '';
+  }
+
   updateSpecPill();
 }
 
 function changeQty(delta) {
-  state.qty = Math.max(1, Math.min(99, state.qty + delta));
+  state.qty = Math.max(1, Math.min(500, state.qty + delta));
   document.getElementById('qty-display').textContent = state.qty;
   updatePrice();
   updateSpecPill();
@@ -1180,6 +1280,10 @@ async function saveConfig() {
         quantity:        state.qty,
         base_price_usd:  base?.price_usd || 0,
         total_price_usd: unit * state.qty,
+        client_name:     state.clientName    || undefined,
+        client_email:    state.clientEmail   || undefined,
+        client_company:  state.clientCompany || undefined,
+        notes:           state.clientNotes   || undefined,
       }),
     });
 
@@ -1220,14 +1324,27 @@ async function downloadPDF() {
   btn.disabled    = true;
   btn.textContent = 'Generating\u2026';
   try {
-    const res  = await fetch('/api/pdf', {
+    const res = await fetch('/api/pdf', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ config_code: state.savedCode }),
     });
-    const data = await res.json();
-    btn.textContent = data.message || 'PDF (Session 3)';
-  } catch (_) {
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `Eltru-${state.savedCode}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    btn.textContent = 'Download PDF';
+  } catch (err) {
+    alert('PDF generation failed: ' + err.message);
     btn.textContent = 'Download PDF';
   } finally {
     btn.disabled = false;
