@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Eltru Quote PDF</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 794px;
+      height: 1123px;
+      overflow: hidden;
+      background: #ffffff;
+      font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 13px;
+      color: #1C1A17;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      width: 794px;
+      height: 1123px;
+      padding: 36px 40px 30px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── HEADER ──────────────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+    }
+
+    .header-left { display: flex; flex-direction: column; gap: 3px; }
+
+    .logo {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #1C3B2A;
+    }
+
+    .logo-sub {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #9A9488;
+    }
+
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .config-code {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: #1C3B2A;
+    }
+
+    #qr-wrap canvas,
+    #qr-wrap img {
+      width: 72px !important;
+      height: 72px !important;
+      display: block;
+    }
+
+    /* ── RULES ───────────────────────────────────────────── */
+    hr {
+      border: none;
+      border-top: 1px solid #E0DCD4;
+      flex-shrink: 0;
+    }
+
+    /* ── VISUAL BOX ──────────────────────────────────────── */
+    .visual-box {
+      height: 230px;
+      background: #EAE6DF;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin: 14px 0;
+    }
+
+    .visual-box svg {
+      width: auto;
+      height: 180px;
+    }
+
+    .layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .layer-multiply { mix-blend-mode: multiply; }
+
+    /* ── SECTIONS ────────────────────────────────────────── */
+    .section {
+      margin: 14px 0 0;
+      flex-shrink: 0;
+    }
+
+    .section-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #9A9488;
+      margin-bottom: 8px;
+    }
+
+    .spec-grid {
+      display: grid;
+      grid-template-columns: 36% 64%;
+      row-gap: 6px;
+    }
+
+    .spec-key {
+      font-size: 12px;
+      color: #9A9488;
+      font-weight: 400;
+    }
+
+    .spec-val {
+      font-size: 12px;
+      color: #1C1A17;
+      font-weight: 500;
+    }
+
+    /* Pricing rows */
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .price-row .p-label { color: #9A9488; font-size: 12px; }
+    .price-row .p-val   { font-size: 12px; font-weight: 500; }
+
+    .price-row.total {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid #E0DCD4;
+    }
+
+    .price-row.total .p-label {
+      color: #1C1A17;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .price-row.total .p-val {
+      color: #1C3B2A;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    /* Client info box */
+    .client-notes {
+      background: #F4F1EC;
+      border-left: 3px solid #1C3B2A;
+      padding: 8px 12px;
+      margin-top: 6px;
+      font-size: 11.5px;
+      color: #1C1A17;
+      line-height: 1.5;
+    }
+
+    /* ── FOOTER ──────────────────────────────────────────── */
+    .footer {
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid #E0DCD4;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      flex-shrink: 0;
+    }
+
+    .footer-left {
+      font-size: 10px;
+      color: #9A9488;
+      line-height: 1.6;
+    }
+
+    .footer-left strong {
+      color: #1C3B2A;
+      font-weight: 600;
+    }
+
+    .footer-badge {
+      font-size: 10px;
+      color: #B8965A;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid #B8965A;
+      padding: 3px 8px;
+      border-radius: 2px;
+    }
+
+    /* Two-column layout for spec + pricing side by side */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0 32px;
+      margin-top: 14px;
+    }
+
+    .two-col .section { margin-top: 0; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="logo">ELTRU</div>
+      <div class="logo-sub">Cubicle Configuration</div>
+    </div>
+    <div class="header-right">
+      <div class="config-code" id="hdr-code">ELT-XXXX</div>
+      <div id="qr-wrap"></div>
+    </div>
+  </div>
+
+  <hr>
+
+  <!-- VISUAL -->
+  <div class="visual-box" id="visual-box">
+    <svg id="cubicle-svg" viewBox="0 0 520 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="0" y="320" width="520" height="80" fill="#DEDAD2"/>
+      <ellipse cx="278" cy="326" rx="198" ry="9" fill="rgba(0,0,0,0.05)"/>
+      <rect x="80" y="48" width="360" height="272" rx="5" id="svg-panel-back" fill="#C8C3BB"/>
+      <rect x="80" y="48" width="360" height="272" rx="5" fill="none" id="svg-trim-back" stroke="#E2DDD6" stroke-width="10"/>
+      <line x1="88" y1="196" x2="432" y2="196" stroke="rgba(0,0,0,0.05)" stroke-width="1.5"/>
+      <line x1="196" y1="56" x2="196" y2="312" stroke="rgba(0,0,0,0.05)" stroke-width="1.5"/>
+      <line x1="320" y1="56" x2="320" y2="312" stroke="rgba(0,0,0,0.05)" stroke-width="1.5"/>
+      <path d="M 80 48 L 80 320 L 28 288 L 28 20 Z" id="svg-panel-left" fill="#BDB8B0"/>
+      <path d="M 80 48 L 80 320 L 28 288 L 28 20 Z" fill="none" id="svg-trim-left" stroke="#DDD8D0" stroke-width="8"/>
+      <rect x="80" y="292" width="360" height="32" rx="3" fill="#D0CBC3"/>
+      <rect x="80" y="320" width="360" height="6" rx="2" fill="#B8B3AB"/>
+      <path d="M 28 266 L 80 294 L 80 320 L 28 292 Z" fill="#C8C3BB"/>
+      <rect x="92" y="322" width="7" height="52" rx="2" fill="#A8A4A0"/>
+      <rect x="421" y="322" width="7" height="52" rx="2" fill="#A8A4A0"/>
+      <rect x="88" y="56" width="344" height="180" rx="3" id="svg-glass" fill="rgba(180,210,235,0.2)" stroke="rgba(160,200,225,0.6)" stroke-width="1.5" style="display:none"/>
+      <rect x="372" y="294" width="68" height="82" rx="4" id="svg-pedestal" fill="#C0BBB3" style="display:none"/>
+      <rect x="372" y="294" width="68" height="14" rx="4" id="svg-pedestal-top" fill="#D0CBC3" style="display:none"/>
+    </svg>
+    <img id="layer-bg"          class="layer"               src="" alt="" style="display:none">
+    <img id="layer-panel"       class="layer layer-multiply" src="" alt="" style="display:none">
+    <img id="layer-trim"        class="layer layer-multiply" src="" alt="" style="display:none">
+    <img id="layer-worksurface" class="layer layer-multiply" src="" alt="" style="display:none">
+    <img id="layer-glass"       class="layer layer-multiply" src="" alt="" style="display:none">
+    <img id="layer-pedestal"    class="layer layer-multiply" src="" alt="" style="display:none">
+  </div>
+
+  <hr>
+
+  <!-- SPEC + PRICING (side by side) -->
+  <div class="two-col">
+    <div class="section">
+      <div class="section-label">Specification</div>
+      <div class="spec-grid" id="spec-grid">
+        <!-- populated by JS -->
+      </div>
+    </div>
+    <div class="section">
+      <div class="section-label">Pricing</div>
+      <div id="pricing-rows">
+        <!-- populated by JS -->
+      </div>
+      <div class="section" id="client-section" style="display:none; margin-top:16px;">
+        <div class="section-label">Prepared For</div>
+        <div class="spec-grid" id="client-grid"></div>
+        <div id="notes-box"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-left">
+      <strong>eltru.com</strong> &nbsp;·&nbsp; Long Island, NY &nbsp;·&nbsp; hello@eltru.com<br>
+      All prices in USD. Quote valid for 30 days unless otherwise stated. Subject to availability.
+    </div>
+    <div class="footer-badge">Eltru &trade;</div>
+  </div>
+
+</div>
+<script>
+(async function () {
+  const params      = new URLSearchParams(window.location.search);
+  const configCode  = params.get('config');
+  const quoteToken  = params.get('token');
+
+  if (!configCode) return;
+
+  // ── Fetch config + options + optional quote in parallel ───
+  const [configRes, optionsRes, quoteRes] = await Promise.all([
+    fetch(`/api/configs/${configCode}`).then(r => r.json()),
+    fetch('/api/options').then(r => r.json()),
+    quoteToken ? fetch(`/api/quotes/${quoteToken}`).then(r => r.json()) : Promise.resolve(null),
+  ]);
+
+  if (!configRes.success) return;
+
+  const config  = configRes.config;
+  const pricing = optionsRes.pricing || [];
+  const quote   = quoteRes?.success ? quoteRes.quote : null;
+
+  // ── Config code header ────────────────────────────────────
+  document.getElementById('hdr-code').textContent = config.config_code;
+
+  // ── QR code ───────────────────────────────────────────────
+  const BASE = window.location.origin;
+  const qrUrl = quoteToken
+    ? `${BASE}/quote.html?token=${quoteToken}`
+    : `${BASE}/?config=${configCode}`;
+
+  try {
+    new QRCode(document.getElementById('qr-wrap'), {
+      text:   qrUrl,
+      width:  72,
+      height: 72,
+      colorDark:  '#1C3B2A',
+      colorLight: '#ffffff',
+    });
+  } catch (_) {
+    document.getElementById('qr-wrap').textContent = qrUrl;
+  }
+
+  // ── SVG visual ────────────────────────────────────────────
+  const panelColor = config.fabric?.hex_color || '#C8C3BB';
+  const trimColor  = config.trim?.hex_color   || '#E2DDD6';
+
+  document.getElementById('svg-panel-back').setAttribute('fill', panelColor);
+  document.getElementById('svg-panel-left').setAttribute('fill', dimHex(panelColor, 12));
+  document.getElementById('svg-trim-back').setAttribute('stroke', trimColor);
+  document.getElementById('svg-trim-left').setAttribute('stroke', dimHex(trimColor, 8));
+
+  if (config.glass && config.glass.slug !== 'none') {
+    const g = document.getElementById('svg-glass');
+    g.style.display = '';
+    g.setAttribute('fill', config.glass.slug === 'frosted-glass'
+      ? 'rgba(200,220,235,0.28)' : 'rgba(175,215,245,0.18)');
+  }
+  if (config.pedestal && config.pedestal.slug !== 'none') {
+    const isGrey = config.pedestal.slug.includes('grey');
+    const pc     = isGrey ? '#A8A39A' : '#C0BBB3';
+    document.getElementById('svg-pedestal').style.display = '';
+    document.getElementById('svg-pedestal-top').style.display = '';
+    document.getElementById('svg-pedestal').setAttribute('fill', pc);
+    document.getElementById('svg-pedestal-top').setAttribute('fill', lightHex(pc, 14));
+  }
+
+  // Try real layer images
+  if (config.brand?.slug && config.style?.slug) {
+    const b = config.brand.slug;
+    const s = config.style.slug;
+    await Promise.all([
+      tryLayer('bg',         b, s, 'default'),
+      tryLayer('worksurface',b, s, 'default'),
+      config.fabric   && tryLayer('panel',    b, s, config.fabric.slug),
+      config.trim     && tryLayer('trim',     b, s, config.trim.slug),
+      config.glass    && tryLayer('glass',    b, s, config.glass.slug),
+      config.pedestal && tryLayer('pedestal', b, s, config.pedestal.slug),
+    ].filter(Boolean));
+  }
+
+  // ── Spec grid ─────────────────────────────────────────────
+  const specRows = [
+    ['Brand',        config.brand?.name],
+    ['Style',        config.style?.name],
+    ['Size',         config.size?.label],
+    ['Panel Height', config.height_2
+      ? `${config.height?.label} / ${config.height_2?.label} — Mixed`
+      : config.height?.label],
+    ['Panel Fabric', config.fabric?.name],
+    ['Trim',         config.trim?.name],
+    ['Glass',        config.glass?.name],
+    ['Pedestal',     config.pedestal?.name],
+    config.outlet_count > 0 && ['Outlets', `${config.outlet_count}`],
+    ['Quantity',     `${config.quantity || 1} unit${(config.quantity || 1) > 1 ? 's' : ''}`],
+  ].filter(Boolean).filter(r => r[1]);
+
+  document.getElementById('spec-grid').innerHTML = specRows
+    .map(([k, v]) => `<div class="spec-key">${k}</div><div class="spec-val">${v}</div>`)
+    .join('');
+
+  // ── Pricing ───────────────────────────────────────────────
+  const qty = config.quantity || 1;
+
+  // Get pricing components
+  const baseRow = pricing.find(p => p.brand_id === config.brand_id && p.style_id === config.style_id);
+  const glassRow = (config.glass && config.glass.slug !== 'none')
+    ? pricing.find(p => p.glass_id === config.glass_id) : null;
+  const pedRow = (config.pedestal && config.pedestal.slug !== 'none')
+    ? pricing.find(p => p.pedestal_id === config.pedestal_id) : null;
+
+  const basePrice  = baseRow?.price_usd  || config.base_price_usd || 0;
+  const glassPrice = glassRow?.price_usd || 0;
+  const pedPrice   = pedRow?.price_usd   || 0;
+
+  // If quote has custom price, use that as unit price override
+  let unitPrice = basePrice + glassPrice + pedPrice;
+  if (quote?.custom_price_usd) unitPrice = quote.custom_price_usd;
+  else if (quote?.discount_pct) unitPrice = Math.round(unitPrice * (1 - quote.discount_pct / 100));
+
+  const totalPrice = unitPrice * qty;
+  const fmt = v => '$' + v.toLocaleString('en-US');
+
+  let pricingHTML = '';
+  if (!quote?.custom_price_usd) {
+    pricingHTML += priceRow('Base configuration', fmt(basePrice));
+    if (glassPrice) pricingHTML += priceRow(`Glass (${config.glass?.name})`, `+${fmt(glassPrice)}`);
+    if (pedPrice)   pricingHTML += priceRow(`Pedestal`, `+${fmt(pedPrice)}`);
+    if (quote?.discount_pct) pricingHTML += priceRow(`Discount (${quote.discount_pct}%)`, `−${fmt(unitPrice - (basePrice + glassPrice + pedPrice) + (basePrice + glassPrice + pedPrice) * quote.discount_pct / 100)}`);
+  }
+  pricingHTML += priceRow('Unit price', fmt(unitPrice));
+  pricingHTML += priceRow(`Quantity`, `× ${qty}`);
+  pricingHTML += `<div class="price-row total"><span class="p-label">Total</span><span class="p-val">${fmt(totalPrice)}</span></div>`;
+  pricingHTML += `<div class="price-row" style="margin-top:5px"><span class="p-label">Installation</span><span class="p-val" style="color:#9A9488">Quoted separately</span></div>`;
+
+  document.getElementById('pricing-rows').innerHTML = pricingHTML;
+
+  // ── Client / quote info ───────────────────────────────────
+  const hasClient = quote?.config?.client_name || quote?.config?.client_email
+    || quote?.config?.client_company || config.client_name || config.client_email;
+  const hasNotes  = quote?.notes_client;
+
+  if (quote || hasClient) {
+    document.getElementById('client-section').style.display = '';
+
+    const validUntil = quote?.expires_at
+      ? new Date(quote.expires_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+      : null;
+
+    const clientRows = [
+      quote?.salesperson && ['Prepared by', quote.salesperson],
+      (config.client_company || quote?.config?.client_company) &&
+        ['Company', config.client_company || quote?.config?.client_company],
+      (config.client_name || quote?.config?.client_name) &&
+        ['Contact', config.client_name || quote?.config?.client_name],
+      (config.client_email || quote?.config?.client_email) &&
+        ['Email', config.client_email || quote?.config?.client_email],
+      validUntil && ['Valid until', validUntil],
+    ].filter(Boolean);
+
+    document.getElementById('client-grid').innerHTML = clientRows
+      .map(([k, v]) => `<div class="spec-key">${k}</div><div class="spec-val">${v}</div>`)
+      .join('');
+
+    if (hasNotes) {
+      document.getElementById('notes-box').innerHTML =
+        `<div class="client-notes">${quote.notes_client}</div>`;
+    }
+  }
+
+  // ── Helpers ───────────────────────────────────────────────
+  function priceRow(label, val) {
+    return `<div class="price-row"><span class="p-label">${label}</span><span class="p-val">${val}</span></div>`;
+  }
+
+  async function tryLayer(type, b, s, optSlug) {
+    try {
+      const r = await fetch(`/api/layers?brand=${b}&style=${s}&type=${type}&option=${optSlug}`);
+      const { url } = await r.json();
+      if (url) {
+        const el = document.getElementById(`layer-${type}`);
+        el.src = url;
+        el.style.display = '';
+      }
+    } catch (_) {}
+  }
+
+  function dimHex(hex, n) {
+    const v = parseInt(hex.replace('#',''), 16);
+    const r = Math.max(0, ((v>>16)&0xff)-n);
+    const g = Math.max(0, ((v>>8)&0xff)-n);
+    const b = Math.max(0, (v&0xff)-n);
+    return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
+  }
+
+  function lightHex(hex, n) {
+    const v = parseInt(hex.replace('#',''), 16);
+    const r = Math.min(255, ((v>>16)&0xff)+n);
+    const g = Math.min(255, ((v>>8)&0xff)+n);
+    const b = Math.min(255, (v&0xff)+n);
+    return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
+  }
+})();
+</script>
+</body>
+</html>

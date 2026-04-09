@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eltru — Cubicle Configurator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:           #F4F1EC;
+      --white:        #FFFFFF;
+      --border:       #E0DCD4;
+      --text:         #1C1A17;
+      --muted:        #9A9488;
+      --accent:       #1C3B2A;
+      --accent-light: #E8F0EB;
+      --gold:         #B8965A;
+      --radius:       10px;
+      --panel-w:      420px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      overflow: hidden;
+    }
+
+    /* ── HEADER ─────────────────────────────────────────────────── */
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      z-index: 100;
+    }
+
+    .logo {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 22px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .logo span { color: var(--gold); }
+
+    .header-tag {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── MAIN LAYOUT ─────────────────────────────────────────────── */
+    main {
+      position: fixed;
+      top: 56px; bottom: 0; left: 0; right: 0;
+      display: flex;
+    }
+
+    /* ── VISUAL PANEL ────────────────────────────────────────────── */
+    .visual-panel {
+      flex: 1;
+      position: relative;
+      background: #EAE6DF;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .layer-container {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: opacity 0.3s ease;
+    }
+
+    .layer-multiply { mix-blend-mode: multiply; }
+
+    .cubicle-svg {
+      width: min(480px, 85%);
+      height: auto;
+      position: relative;
+      z-index: 2;
+      filter: drop-shadow(0 20px 60px rgba(0,0,0,0.08));
+      transition: all 0.4s ease;
+    }
+
+    /* ── PRICE BADGE ─────────────────────────────────────────────── */
+    .price-badge {
+      position: absolute;
+      top: 20px; right: 20px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(8px);
+      border-radius: 100px;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      z-index: 10;
+    }
+
+    .price-badge.has-price {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* ── SPEC PILL ───────────────────────────────────────────────── */
+    .spec-pill {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(28,26,23,0.78);
+      backdrop-filter: blur(10px);
+      border-radius: 100px;
+      padding: 9px 22px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.88);
+      white-space: nowrap;
+      z-index: 10;
+      letter-spacing: 0.02em;
+      transition: opacity 0.3s ease;
+    }
+
+    /* ── CONFIG PANEL ────────────────────────────────────────────── */
+    .config-panel {
+      width: var(--panel-w);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--white);
+      border-left: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    /* ── STEP DOTS ───────────────────────────────────────────────── */
+    .step-dots-wrap {
+      padding: 18px 28px 0;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .step-dot {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      transition: all 0.25s ease;
+      width: 6px;
+    }
+    .step-dot.active   { width: 22px; background: var(--accent); }
+    .step-dot.done     { background: var(--accent); opacity: 0.35; cursor: pointer; }
+    .step-dot.locked   { background: var(--border); cursor: default; }
+
+    /* ── STEP CONTENT ────────────────────────────────────────────── */
+    .steps-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px 28px 16px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .steps-scroll::-webkit-scrollbar { width: 4px; }
+    .steps-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .step-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .step-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 28px;
+      font-weight: 400;
+      line-height: 1.2;
+      color: var(--text);
+      margin-bottom: 18px;
+    }
+
+    /* ── OPTION CARDS ────────────────────────────────────────────── */
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .options-grid.single-col { grid-template-columns: 1fr; }
+
+    .opt-card {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+      background: var(--white);
+      user-select: none;
+      position: relative;
+    }
+    .opt-card:hover  { border-color: var(--accent); background: var(--accent-light); }
+    .opt-card:active { transform: scale(0.98); }
+    .opt-card.selected { border-color: var(--accent); background: var(--accent-light); }
+    .opt-card.selected .opt-check { opacity: 1; }
+
+    .opt-card-inner {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .opt-name {
+      font-weight: 500;
+      font-size: 13px;
+      line-height: 1.3;
+      color: var(--text);
+    }
+
+    .opt-desc {
+      font-size: 11.5px;
+      color: var(--muted);
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    .opt-check {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      opacity: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.15s ease;
+      margin-top: 1px;
+    }
+    .opt-check::after {
+      content: '';
+      width: 4px;
+      height: 7px;
+      border-right: 1.5px solid #fff;
+      border-bottom: 1.5px solid #fff;
+      transform: rotate(40deg) translate(-1px, -1px);
+      display: block;
+    }
+
+    /* Brand cards */
+    .brand-card {
+      padding: 18px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .brand-icon {
+      width: 38px; height: 38px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--white);
+      background: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    /* Style diagram cards */
+    .style-card {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+    .style-diagram { width: 80px; height: 54px; }
+
+    /* Fabric swatch cards */
+    .swatch-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+    }
+    .color-swatch {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 2px solid rgba(0,0,0,0.07);
+      transition: transform 0.15s ease;
+    }
+    .opt-card.selected .color-swatch { transform: scale(1.1); }
+    .swatch-info { flex: 1; min-width: 0; }
+
+    /* Trim cards */
+    .trim-card {
+      padding: 18px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+    .trim-swatch-large {
+      width: 52px; height: 52px;
+      border-radius: 10px;
+      border: 2px solid rgba(0,0,0,0.07);
+      transition: transform 0.15s ease;
+    }
+    .opt-card.selected .trim-swatch-large { transform: scale(1.08); }
+
+    /* ── SUMMARY ─────────────────────────────────────────────────── */
+    .summary-panel {
+      border-top: 1px solid var(--border);
+      padding: 14px 28px;
+      flex-shrink: 0;
+      background: #FAFAF8;
+    }
+
+    .summary-rows {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+    }
+    .summary-row .s-label { color: var(--muted); }
+    .summary-row .s-val   { font-weight: 500; color: var(--text); }
+
+    .qty-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .qty-label { font-size: 12px; color: var(--muted); }
+    .qty-control { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+    .qty-btn {
+      width: 25px; height: 25px;
+      border-radius: 6px;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      cursor: pointer;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text);
+      transition: all 0.15s ease;
+      line-height: 1;
+    }
+    .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .qty-val { font-size: 14px; font-weight: 600; min-width: 22px; text-align: center; }
+
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+    }
+    .total-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .total-amount {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 26px;
+      font-weight: 500;
+      color: var(--accent);
+    }
+
+    /* ── ACTION BUTTONS ──────────────────────────────────────────── */
+    .action-section {
+      padding: 0 28px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 11px 20px;
+      border-radius: var(--radius);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: none;
+      text-align: center;
+    }
+    .btn-primary   { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #244d36; }
+    .btn-secondary {
+      background: var(--white);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+    }
+    .btn-secondary:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Config code display */
+    .config-code-box {
+      background: var(--accent-light);
+      border: 1.5px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .config-code-label { font-size: 10px; color: var(--accent); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 2px; }
+    .config-code-val   { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--accent); letter-spacing: 0.06em; }
+    .config-code-copy  { font-size: 11px; color: var(--accent); cursor: pointer; text-decoration: underline; white-space: nowrap; }
+
+    /* ── LOADING ─────────────────────────────────────────────────── */
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      padding: 50px 20px;
+    }
+    .spinner {
+      width: 30px; height: 30px;
+      border: 2.5px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 13px; color: var(--muted); text-align: center; line-height: 1.5; }
+
+    /* ── MOBILE ──────────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      :root { --panel-w: 100%; }
+      html, body { overflow: auto; }
+      main {
+        flex-direction: column;
+        position: relative;
+        top: 56px;
+        height: auto;
+        min-height: calc(100vh - 56px);
+      }
+      .visual-panel  { height: 40vw; min-height: 220px; flex-shrink: 0; }
+      .config-panel  { width: 100%; border-left: none; border-top: 1px solid var(--border); }
+      .price-badge   { top: 10px; right: 10px; }
+      .spec-pill     { bottom: 10px; font-size: 11px; padding: 7px 14px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a class="logo" href="/">Eltru<span>.</span></a>
+  <span class="header-tag">Cubicle Configurator</span>
+</header>
+
+<main>
+
+  <!-- ── VISUAL PANEL ─────────────────────────────────────────── -->
+  <div class="visual-panel">
+    <div class="layer-container">
+      <!-- SVG illustration (always visible; updates with selections) -->
+      <div id="svg-wrap" style="position:relative;z-index:2;display:flex;align-items:center;justify-content:center;width:100%;height:100%;">
+        <svg class="cubicle-svg" id="cubicle-svg" viewBox="0 0 520 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Floor -->
+          <rect x="0" y="320" width="520" height="80" fill="#DEDAD2"/>
+          <!-- Unit shadow -->
+          <ellipse cx="278" cy="326" rx="198" ry="9" fill="rgba(0,0,0,0.06)"/>
+          <!-- Back panel body -->
+          <rect x="80" y="48" width="360" height="272" rx="5" id="svg-panel-back" fill="#C8C3BB"/>
+          <!-- Back panel trim frame -->
+          <rect x="80" y="48" width="360" height="272" rx="5" fill="none" id="svg-trim-back" stroke="#E2DDD6" stroke-width="10"/>
+          <!-- Subtle panel dividers -->
+          <line x1="88" y1="196" x2="432" y2="196" stroke="rgba(0,0,0,0.05)" stroke-width="1.5"/>
+          <line x1="196" y1="56" x2="196" y2="312" stroke="rgba(0,0,0,0.05)" stroke-width="1.5"/>
+          <line x1="320" y1="56" x2="320" y2="312" stroke="rgba(0,0,0,0.05)" stroke-width="1.5"/>
+          <!-- Left return panel -->
+          <path d="M 80 48 L 80 320 L 28 288 L 28 20 Z" id="svg-panel-left" fill="#BDB8B0"/>
+          <path d="M 80 48 L 80 320 L 28 288 L 28 20 Z" fill="none" id="svg-trim-left" stroke="#DDD8D0" stroke-width="8"/>
+          <!-- Work surface (back) -->
+          <rect x="80" y="292" width="360" height="32" rx="3" fill="#D0CBC3"/>
+          <!-- Work surface edge -->
+          <rect x="80" y="320" width="360" height="6" rx="2" fill="#B8B3AB"/>
+          <!-- Work surface (left return) -->
+          <path d="M 28 266 L 80 294 L 80 320 L 28 292 Z" fill="#C8C3BB"/>
+          <!-- Legs -->
+          <rect x="92" y="322" width="7" height="52" rx="2" fill="#A8A4A0"/>
+          <rect x="421" y="322" width="7" height="52" rx="2" fill="#A8A4A0"/>
+          <!-- Glass insert (hidden by default) -->
+          <rect x="88" y="56" width="344" height="180" rx="3" id="svg-glass" fill="rgba(180,210,235,0.2)" stroke="rgba(160,200,225,0.6)" stroke-width="1.5" style="display:none"/>
+          <!-- Pedestal box (hidden by default) -->
+          <rect x="372" y="294" width="68" height="82" rx="4" id="svg-pedestal" fill="#C0BBB3" style="display:none"/>
+          <rect x="372" y="294" width="68" height="14" rx="4" id="svg-pedestal-top" fill="#D0CBC3" style="display:none"/>
+        </svg>
+      </div>
+
+      <!-- Real layer images (shown when storage_url assets exist) -->
+      <img id="layer-bg"          class="layer"               src="" alt="" style="display:none">
+      <img id="layer-panel"       class="layer layer-multiply" src="" alt="" style="display:none">
+      <img id="layer-trim"        class="layer layer-multiply" src="" alt="" style="display:none">
+      <img id="layer-worksurface" class="layer layer-multiply" src="" alt="" style="display:none">
+      <img id="layer-glass"       class="layer layer-multiply" src="" alt="" style="display:none">
+      <img id="layer-pedestal"    class="layer layer-multiply" src="" alt="" style="display:none">
+    </div>
+
+    <div class="price-badge" id="price-badge">Configure to see pricing</div>
+    <div class="spec-pill"   id="spec-pill">Eltru Cubicle Configurator</div>
+  </div>
+
+  <!-- ── CONFIG PANEL ──────────────────────────────────────────── -->
+  <div class="config-panel">
+    <div class="step-dots-wrap" id="step-dots"></div>
+
+    <div class="steps-scroll" id="steps-scroll">
+      <div id="step-content">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <div class="loading-text">Loading configurator&hellip;</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="summary-panel" id="summary-panel" style="display:none">
+      <div class="summary-rows" id="summary-rows"></div>
+      <div class="qty-row">
+        <span class="qty-label">Quantity</span>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeQty(-1)">&#8722;</button>
+          <span class="qty-val" id="qty-display">1</span>
+          <button class="qty-btn" onclick="changeQty(1)">&#43;</button>
+        </div>
+      </div>
+      <div class="summary-total">
+        <span class="total-label">Total</span>
+        <span class="total-amount" id="total-amount">—</span>
+      </div>
+    </div>
+
+    <div class="action-section" id="action-section" style="display:none">
+      <div id="config-code-display" style="display:none"></div>
+      <button class="btn btn-primary"   id="btn-save"  onclick="saveConfig()">Save &amp; Get Quote Code</button>
+      <button class="btn btn-secondary" id="btn-pdf"   onclick="downloadPDF()" disabled>Download PDF</button>
+      <button class="btn btn-secondary" id="btn-share" onclick="shareConfig()" disabled>Share Configuration</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ─────────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────────
+const state = {
+  brand: null, style: null, size: null,
+  height: null, height2: null,
+  fabric: null, trim: null, glass: null, pedestal: null,
+  qty: 1,
+  currentStep: 1,
+  completedSteps: new Set(),
+  savedCode: null,
+  savedId: null,
+};
+
+let options     = null;
+let layerCache  = {};   // keyed by "brand-style" → grouped layers object
+
+const STEP_TITLES = [
+  '',
+  'Choose your brand',
+  'Choose your style',
+  'Select a size',
+  'Panel height',
+  'Panel fabric',
+  'Trim color',
+  'Glass add-on',
+  'Pedestal storage',
+];
+
+// ─────────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const res = await fetch('/api/options');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    options = await res.json();
+
+    const params     = new URLSearchParams(window.location.search);
+    const configCode = params.get('config');
+    if (configCode) {
+      await loadExistingConfig(configCode);
+    } else {
+      renderStep(1);
+    }
+  } catch (err) {
+    document.getElementById('step-content').innerHTML = `
+      <div class="loading-state">
+        <div class="loading-text" style="color:#c55">
+          Failed to load options.<br>Is the server running?<br>
+          <small style="opacity:0.7">${err.message}</small>
+        </div>
+      </div>`;
+  }
+}
+
+async function loadExistingConfig(code) {
+  try {
+    const res  = await fetch(`/api/configs/${code}`);
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    const c = data.config;
+
+    if (c.brand)    state.brand    = options.brands.find(b => b.id === c.brand.id) || null;
+    if (c.style && state.brand)
+                    state.style    = state.brand.styles.find(s => s.id === c.style.id) || null;
+    if (c.size && state.style)
+                    state.size     = state.style.sizes.find(sz => sz.id === c.size.id) || null;
+    const bh = state.brand ? (options.heights[state.brand.slug] || []) : [];
+    if (c.height)   state.height   = bh.find(h => h.id === c.height.id)   || null;
+    if (c.height_2) state.height2  = bh.find(h => h.id === c.height_2.id) || null;
+    if (c.fabric)   state.fabric   = options.fabrics.find(f => f.id === c.fabric.id)           || null;
+    if (c.trim)     state.trim     = options.trims.find(t => t.id === c.trim.id)               || null;
+    if (c.glass)    state.glass    = options.glass_options.find(g => g.id === c.glass.id)      || null;
+    if (c.pedestal) state.pedestal = options.pedestals.find(p => p.id === c.pedestal.id)      || null;
+    state.qty       = c.quantity || 1;
+    state.savedCode = c.config_code;
+    state.savedId   = c.id;
+
+    for (let i = 1; i <= 8; i++) state.completedSteps.add(i);
+
+    renderStep(8);
+    updateVisual();
+    showActions();
+    if (state.savedCode) showCodeBox(state.savedCode);
+  } catch (_) {
+    renderStep(1);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// STEP RENDERING
+// ─────────────────────────────────────────────────────────────────
+function renderStep(n) {
+  state.currentStep = n;
+  updateDots();
+  updateSummary();
+  document.getElementById('step-content').innerHTML = buildStep(n);
+  document.getElementById('steps-scroll').scrollTop = 0;
+}
+
+function buildStep(n) {
+  const hdr = `
+    <div class="step-label">Step ${n} of 8</div>
+    <div class="step-title">${STEP_TITLES[n]}</div>`;
+  switch (n) {
+    case 1: return hdr + brandHTML();
+    case 2: return hdr + styleHTML();
+    case 3: return hdr + sizeHTML();
+    case 4: return hdr + heightHTML();
+    case 5: return hdr + fabricHTML();
+    case 6: return hdr + trimHTML();
+    case 7: return hdr + glassHTML();
+    case 8: return hdr + pedestalHTML();
+    default: return '';
+  }
+}
+
+// ── Step builders ─────────────────────────────────────────────────
+function brandHTML() {
+  return `<div class="options-grid">${options.brands.map(b => `
+    <div class="opt-card brand-card ${state.brand?.id === b.id ? 'selected' : ''}"
+         onclick="selectBrand('${b.id}')">
+      <div class="brand-icon">${b.name.slice(0,2)}</div>
+      <div class="opt-name">${b.name}</div>
+      <div class="opt-check"></div>
+    </div>`).join('')}</div>`;
+}
+
+function styleHTML() {
+  if (!state.brand) return '<div class="loading-text">Select a brand first.</div>';
+  return `<div class="options-grid">${state.brand.styles.map(s => `
+    <div class="opt-card style-card ${state.style?.id === s.id ? 'selected' : ''}"
+         onclick="selectStyle('${s.id}')">
+      ${diagramSVG(s.slug)}
+      <div class="opt-name">${s.name}</div>
+      <div class="opt-check"></div>
+    </div>`).join('')}</div>`;
+}
+
+function diagramSVG(slug) {
+  if (slug === 'l-shape') return `
+    <svg class="style-diagram" viewBox="0 0 80 56" fill="none">
+      <rect x="2" y="2"  width="32" height="52" rx="3" fill="#C8C3BB" stroke="#9A9488" stroke-width="1.5"/>
+      <rect x="32" y="26" width="46" height="28" rx="3" fill="#C8C3BB" stroke="#9A9488" stroke-width="1.5"/>
+    </svg>`;
+  return `
+    <svg class="style-diagram" viewBox="0 0 80 56" fill="none">
+      <rect x="4" y="6" width="72" height="44" rx="3" fill="#C8C3BB" stroke="#9A9488" stroke-width="1.5"/>
+      <line x1="4" y1="36" x2="76" y2="36" stroke="#9A9488" stroke-width="1" stroke-dasharray="4 3" opacity="0.6"/>
+    </svg>`;
+}
+
+function sizeHTML() {
+  if (!state.style) return '<div class="loading-text">Select a style first.</div>';
+  return `<div class="options-grid">${state.style.sizes.map(sz => `
+    <div class="opt-card ${state.size?.id === sz.id ? 'selected' : ''}"
+         onclick="selectSize('${sz.id}')">
+      <div class="opt-card-inner">
+        <div>
+          <div class="opt-name">${sz.label}</div>
+          <div class="opt-desc">${sz.width_in}&Prime; &times; ${sz.depth_in}&Prime;</div>
+        </div>
+        <div class="opt-check"></div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function heightHTML() {
+  if (!state.brand) return '<div class="loading-text">Select a brand first.</div>';
+  const bh       = options.heights[state.brand.slug] || [];
+  const isLShape = state.style?.slug === 'l-shape';
+
+  let cards = bh.map(h => `
+    <div class="opt-card ${state.height?.id === h.id && !state.height2 ? 'selected' : ''}"
+         onclick="selectHeight('${h.id}', null)">
+      <div class="opt-card-inner">
+        <div>
+          <div class="opt-name">${h.label}</div>
+          <div class="opt-desc">Uniform height</div>
+        </div>
+        <div class="opt-check"></div>
+      </div>
+    </div>`).join('');
+
+  if (isLShape && bh.length >= 2) {
+    const sorted = [...bh].sort((a, b) => a.height_in - b.height_in);
+    const [lo, hi] = sorted;
+    cards += `
+      <div class="opt-card ${state.height?.id === lo.id && state.height2?.id === hi.id ? 'selected' : ''}"
+           onclick="selectHeight('${lo.id}', '${hi.id}')">
+        <div class="opt-card-inner">
+          <div>
+            <div class="opt-name">${lo.label} / ${hi.label}</div>
+            <div class="opt-desc">Mixed — low front</div>
+          </div>
+          <div class="opt-check"></div>
+        </div>
+      </div>
+      <div class="opt-card ${state.height?.id === hi.id && state.height2?.id === lo.id ? 'selected' : ''}"
+           onclick="selectHeight('${hi.id}', '${lo.id}')">
+        <div class="opt-card-inner">
+          <div>
+            <div class="opt-name">${hi.label} / ${lo.label}</div>
+            <div class="opt-desc">Mixed — high front</div>
+          </div>
+          <div class="opt-check"></div>
+        </div>
+      </div>`;
+  }
+
+  return `<div class="options-grid">${cards}</div>`;
+}
+
+function fabricHTML() {
+  return `<div class="options-grid">${options.fabrics.map(f => `
+    <div class="opt-card swatch-card ${state.fabric?.id === f.id ? 'selected' : ''}"
+         onclick="selectFabric('${f.id}')">
+      <div class="color-swatch" style="background:${f.hex_color}"></div>
+      <div class="swatch-info">
+        <div class="opt-name">${f.name}</div>
+        <div class="opt-desc">${f.description}</div>
+      </div>
+      <div class="opt-check"></div>
+    </div>`).join('')}</div>`;
+}
+
+function trimHTML() {
+  return `<div class="options-grid">${options.trims.map(t => `
+    <div class="opt-card trim-card ${state.trim?.id === t.id ? 'selected' : ''}"
+         onclick="selectTrim('${t.id}')">
+      <div class="trim-swatch-large" style="background:${t.hex_color}"></div>
+      <div class="opt-name">${t.name}</div>
+      <div class="opt-check"></div>
+    </div>`).join('')}</div>`;
+}
+
+function glassHTML() {
+  const isLShape = state.style?.slug === 'l-shape';
+  const visible  = options.glass_options.filter(g => !g.l_shape_only || isLShape);
+  return `<div class="options-grid single-col">${visible.map(g => `
+    <div class="opt-card ${state.glass?.id === g.id ? 'selected' : ''}"
+         onclick="selectGlass('${g.id}')">
+      <div class="opt-card-inner">
+        <div>
+          <div class="opt-name">${g.name}</div>
+          <div class="opt-desc">${g.description}</div>
+        </div>
+        <div class="opt-check"></div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function pedestalHTML() {
+  const isLShape = state.style?.slug === 'l-shape';
+  const visible  = options.pedestals.filter(p => !p.l_shape_only || isLShape);
+  return `<div class="options-grid single-col">${visible.map(p => `
+    <div class="opt-card ${state.pedestal?.id === p.id ? 'selected' : ''}"
+         onclick="selectPedestal('${p.id}')">
+      <div class="opt-card-inner">
+        <div>
+          <div class="opt-name">${p.name}</div>
+          <div class="opt-desc">${p.description}</div>
+        </div>
+        <div class="opt-check"></div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SELECTION HANDLERS
+// ─────────────────────────────────────────────────────────────────
+function selectBrand(id) {
+  state.brand   = options.brands.find(b => b.id == id) || null;
+  state.style   = null; state.size = null;
+  state.height  = null; state.height2 = null;
+  state.completedSteps.add(1);
+  updateVisual();
+  advance(2);
+}
+
+function selectStyle(id) {
+  state.style   = state.brand?.styles.find(s => s.id == id) || null;
+  state.size    = null; state.height = null; state.height2 = null;
+  state.completedSteps.add(2);
+  // Clear layer cache so a fresh fetch occurs for this brand/style
+  if (state.brand && state.style) delete layerCache[`${state.brand.slug}/${state.style.slug}`];
+  updateVisual();
+  advance(3);
+}
+
+function selectSize(id) {
+  state.size = state.style?.sizes.find(sz => sz.id == id) || null;
+  state.completedSteps.add(3);
+  advance(4);
+}
+
+function selectHeight(id1, id2) {
+  const bh     = options.heights[state.brand?.slug] || [];
+  state.height = bh.find(h => h.id == id1) || null;
+  state.height2 = id2 ? (bh.find(h => h.id == id2) || null) : null;
+  state.completedSteps.add(4);
+  advance(5);
+}
+
+function selectFabric(id) {
+  state.fabric = options.fabrics.find(f => f.id == id) || null;
+  state.completedSteps.add(5);
+  updateVisual();
+  advance(6);
+}
+
+function selectTrim(id) {
+  state.trim = options.trims.find(t => t.id == id) || null;
+  state.completedSteps.add(6);
+  updateVisual();
+  advance(7);
+}
+
+function selectGlass(id) {
+  state.glass = options.glass_options.find(g => g.id == id) || null;
+  state.completedSteps.add(7);
+  updateVisual();
+  advance(8);
+}
+
+function selectPedestal(id) {
+  state.pedestal = options.pedestals.find(p => p.id == id) || null;
+  state.completedSteps.add(8);
+  updateVisual();
+  updateSummary();
+  updatePrice();
+  showActions();
+  // Re-render step 8 to show checkmark
+  document.getElementById('step-content').innerHTML = buildStep(8);
+}
+
+function advance(toStep) {
+  updateSummary();
+  updatePrice();
+  setTimeout(() => renderStep(toStep), 180);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// STEP DOTS
+// ─────────────────────────────────────────────────────────────────
+function updateDots() {
+  let html = '';
+  for (let i = 1; i <= 8; i++) {
+    let cls    = 'step-dot locked';
+    let click  = '';
+    if (i === state.currentStep) cls = 'step-dot active';
+    else if (state.completedSteps.has(i)) { cls = 'step-dot done'; click = `onclick="renderStep(${i})"` ; }
+    html += `<div class="${cls}" ${click} title="Step ${i}: ${STEP_TITLES[i]}"></div>`;
+  }
+  document.getElementById('step-dots').innerHTML = html;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// SUMMARY + PRICE
+// ─────────────────────────────────────────────────────────────────
+const SUMMARY_KEYS = [
+  ['Brand',    s => s.brand?.name],
+  ['Style',    s => s.style?.name],
+  ['Size',     s => s.size?.label],
+  ['Height',   s => s.height2 ? `${s.height?.label} / ${s.height2?.label}` : s.height?.label],
+  ['Fabric',   s => s.fabric?.name],
+  ['Trim',     s => s.trim?.name],
+  ['Glass',    s => s.glass?.name],
+  ['Pedestal', s => s.pedestal?.name],
+];
+
+function updateSummary() {
+  if (!state.brand) return;
+  document.getElementById('summary-panel').style.display = '';
+
+  const rows = SUMMARY_KEYS
+    .filter(([, fn]) => fn(state))
+    .map(([label, fn]) => `
+      <div class="summary-row">
+        <span class="s-label">${label}</span>
+        <span class="s-val">${fn(state)}</span>
+      </div>`)
+    .join('');
+
+  document.getElementById('summary-rows').innerHTML = rows;
+  document.getElementById('qty-display').textContent = state.qty;
+  updatePrice();
+}
+
+function updatePrice() {
+  const badge  = document.getElementById('price-badge');
+  const totEl  = document.getElementById('total-amount');
+
+  if (!state.brand || !state.style) {
+    badge.textContent = 'Configure to see pricing';
+    badge.classList.remove('has-price');
+    totEl.textContent = '—';
+    return;
+  }
+
+  const base  = options.pricing.find(p => p.brand_id === state.brand.id && p.style_id === state.style.id);
+  const glass = (state.glass && state.glass.slug !== 'none')
+    ? options.pricing.find(p => p.glass_id === state.glass.id) : null;
+  const ped   = (state.pedestal && state.pedestal.slug !== 'none')
+    ? options.pricing.find(p => p.pedestal_id === state.pedestal.id) : null;
+
+  const unit  = (base?.price_usd || 0) + (glass?.price_usd || 0) + (ped?.price_usd || 0);
+  const total = unit * state.qty;
+  const fmt   = v => '$' + v.toLocaleString('en-US');
+
+  badge.textContent = `From ${fmt(unit)} / unit`;
+  badge.classList.add('has-price');
+  totEl.textContent = fmt(total);
+  updateSpecPill();
+}
+
+function changeQty(delta) {
+  state.qty = Math.max(1, Math.min(99, state.qty + delta));
+  document.getElementById('qty-display').textContent = state.qty;
+  updatePrice();
+  updateSpecPill();
+}
+
+// ─────────────────────────────────────────────────────────────────
+// VISUAL / LAYER UPDATES
+// ─────────────────────────────────────────────────────────────────
+function updateVisual() {
+  const panelColor = state.fabric?.hex_color || '#C8C3BB';
+  const trimColor  = state.trim?.hex_color   || '#E2DDD6';
+
+  document.getElementById('svg-panel-back').setAttribute('fill', panelColor);
+  document.getElementById('svg-panel-left').setAttribute('fill', dimColor(panelColor, 12));
+  document.getElementById('svg-trim-back').setAttribute('stroke', trimColor);
+  document.getElementById('svg-trim-left').setAttribute('stroke', dimColor(trimColor, 8));
+
+  // Glass
+  const glassEl = document.getElementById('svg-glass');
+  if (state.glass && state.glass.slug !== 'none') {
+    glassEl.style.display = '';
+    glassEl.setAttribute('fill',
+      state.glass.slug === 'frosted-glass'
+        ? 'rgba(200,220,235,0.28)' : 'rgba(175,215,245,0.18)');
+  } else {
+    glassEl.style.display = 'none';
+  }
+
+  // Pedestal
+  const pedEl    = document.getElementById('svg-pedestal');
+  const pedTopEl = document.getElementById('svg-pedestal-top');
+  if (state.pedestal && state.pedestal.slug !== 'none') {
+    const isGrey = state.pedestal.slug.includes('grey');
+    const pedC   = isGrey ? '#A8A39A' : '#C0BBB3';
+    pedEl.style.display    = '';
+    pedTopEl.style.display = '';
+    pedEl.setAttribute('fill', pedC);
+    pedTopEl.setAttribute('fill', lightColor(pedC, 14));
+  } else {
+    pedEl.style.display    = 'none';
+    pedTopEl.style.display = 'none';
+  }
+
+  updateSpecPill();
+
+  if (state.brand && state.style) {
+    const key = `${state.brand.slug}/${state.style.slug}`;
+    if (layerCache[key]) applyLayers(); // already cached — apply immediately
+    else fetchLayers();                 // fetch then apply
+  }
+}
+
+function updateSpecPill() {
+  const parts = [];
+  if (state.brand)   parts.push(state.brand.name);
+  if (state.style)   parts.push(state.style.name);
+  if (state.size)    parts.push(state.size.label);
+  if (state.qty > 1) parts.push(`Qty ${state.qty}`);
+  document.getElementById('spec-pill').textContent =
+    parts.length ? parts.join('  ·  ') : 'Eltru Cubicle Configurator';
+}
+
+function dimColor(hex, amount) {
+  const n = parseInt(hex.replace('#',''), 16);
+  const r = Math.max(0, ((n >> 16) & 0xff) - amount);
+  const g = Math.max(0, ((n >>  8) & 0xff) - amount);
+  const b = Math.max(0,  (n        & 0xff) - amount);
+  return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
+
+function lightColor(hex, amount) {
+  const n = parseInt(hex.replace('#',''), 16);
+  const r = Math.min(255, ((n >> 16) & 0xff) + amount);
+  const g = Math.min(255, ((n >>  8) & 0xff) + amount);
+  const b = Math.min(255,  (n        & 0xff) + amount);
+  return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
+
+async function fetchLayers() {
+  const b   = state.brand.slug;
+  const s   = state.style.slug;
+  const key = `${b}/${s}`;
+
+  // Fetch all layers for this brand+style once, then cache
+  if (!layerCache[key]) {
+    try {
+      const r = await fetch(`/api/layers?brand=${b}&style=${s}`);
+      layerCache[key] = await r.json();
+    } catch (_) {
+      layerCache[key] = {};
+    }
+  }
+
+  applyLayers();
+}
+
+function applyLayers() {
+  if (!state.brand || !state.style) return;
+  const cache = layerCache[`${state.brand.slug}/${state.style.slug}`];
+  if (!cache) return;
+
+  function setLayer(elId, url) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (url) { el.src = url; el.style.display = ''; }
+    else     { el.style.display = 'none'; }
+  }
+
+  // background / worksurface — direct URL strings
+  setLayer('layer-bg',         typeof cache.background  === 'string' ? cache.background  : null);
+  setLayer('layer-worksurface',typeof cache.worksurface === 'string' ? cache.worksurface : null);
+
+  // option-keyed layers — look up by slug
+  const panelUrl   = state.fabric   ? (cache.panel?.[state.fabric.slug]     || null) : null;
+  const trimUrl    = state.trim     ? (cache.trim?.[state.trim.slug]         || null) : null;
+  const glassUrl   = state.glass    ? (cache.glass?.[state.glass.slug]       || null) : null;
+  const pedUrl     = state.pedestal ? (cache.pedestal?.[state.pedestal.slug] || null) : null;
+
+  setLayer('layer-panel',    panelUrl);
+  setLayer('layer-trim',     trimUrl);
+  setLayer('layer-glass',    glassUrl);
+  setLayer('layer-pedestal', pedUrl);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// ACTIONS
+// ─────────────────────────────────────────────────────────────────
+function showActions() {
+  document.getElementById('summary-panel').style.display = '';
+  document.getElementById('action-section').style.display = '';
+  updateSummary();
+}
+
+async function saveConfig() {
+  if (!state.brand || !state.style) {
+    alert('Please complete at least Brand and Style before saving.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-save');
+  btn.disabled     = true;
+  btn.textContent  = 'Saving\u2026';
+
+  try {
+    const base  = options.pricing.find(p => p.brand_id === state.brand.id && p.style_id === state.style.id);
+    const glass = (state.glass && state.glass.slug !== 'none')
+      ? options.pricing.find(p => p.glass_id === state.glass.id) : null;
+    const ped   = (state.pedestal && state.pedestal.slug !== 'none')
+      ? options.pricing.find(p => p.pedestal_id === state.pedestal.id) : null;
+    const unit  = (base?.price_usd || 0) + (glass?.price_usd || 0) + (ped?.price_usd || 0);
+
+    const res = await fetch('/api/configs', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        brand_id:        state.brand?.id,
+        style_id:        state.style?.id,
+        size_id:         state.size?.id,
+        height_id:       state.height?.id,
+        height_id_2:     state.height2?.id,
+        fabric_id:       state.fabric?.id,
+        trim_id:         state.trim?.id,
+        glass_id:        state.glass?.id,
+        pedestal_id:     state.pedestal?.id,
+        quantity:        state.qty,
+        base_price_usd:  base?.price_usd || 0,
+        total_price_usd: unit * state.qty,
+      }),
+    });
+
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+
+    state.savedCode = data.config_code;
+    state.savedId   = data.config_id;
+
+    showCodeBox(data.config_code);
+    btn.textContent = 'Saved \u2713';
+    document.getElementById('btn-pdf').disabled   = false;
+    document.getElementById('btn-share').disabled = false;
+    history.replaceState({}, '', `/?config=${data.config_code}`);
+  } catch (err) {
+    alert('Save failed: ' + err.message);
+    btn.disabled    = false;
+    btn.textContent = 'Save & Get Quote Code';
+  }
+}
+
+function showCodeBox(code) {
+  const box = document.getElementById('config-code-display');
+  box.style.display = '';
+  box.innerHTML = `
+    <div class="config-code-box">
+      <div>
+        <div class="config-code-label">Configuration Code</div>
+        <div class="config-code-val">${code}</div>
+      </div>
+      <span class="config-code-copy" onclick="copyText('${code}')">Copy code</span>
+    </div>`;
+}
+
+async function downloadPDF() {
+  if (!state.savedCode) return;
+  const btn = document.getElementById('btn-pdf');
+  btn.disabled    = true;
+  btn.textContent = 'Generating\u2026';
+  try {
+    const res  = await fetch('/api/pdf', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config_code: state.savedCode }),
+    });
+    const data = await res.json();
+    btn.textContent = data.message || 'PDF (Session 3)';
+  } catch (_) {
+    btn.textContent = 'Download PDF';
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function shareConfig() {
+  if (!state.savedCode) return;
+  await copyText(`${location.origin}/?config=${state.savedCode}`);
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('Copied!');
+  } catch (_) {
+    prompt('Copy this:', text);
+  }
+}
+
+let _toastTimer;
+function showToast(msg) {
+  let t = document.getElementById('__toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = '__toast';
+    Object.assign(t.style, {
+      position: 'fixed', bottom: '32px', left: '50%',
+      transform: 'translateX(-50%)',
+      background: 'var(--accent)', color: '#fff',
+      padding: '9px 20px', borderRadius: '100px',
+      fontSize: '13px', fontWeight: '500', zIndex: '9999',
+      pointerEvents: 'none', transition: 'opacity 0.3s ease',
+      boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+    });
+    document.body.appendChild(t);
+  }
+  t.textContent  = msg;
+  t.style.opacity = '1';
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { t.style.opacity = '0'; }, 2400);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

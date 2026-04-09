@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eltru Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:     #F4F1EC;
+    --surf:   #FDFCFA;
+    --acc:    #1C3B2A;
+    --acc2:   #2A5A3F;
+    --gold:   #B8965A;
+    --gold2:  #D4AF7A;
+    --text:   #1A1A1A;
+    --muted:  #6B6B6B;
+    --border: #E0D8CE;
+    --err:    #C0392B;
+    --ok:     #1C6B3A;
+    --warn:   #9B5E0A;
+    --r:      10px;
+    --sh:     0 2px 12px rgba(0,0,0,0.08);
+    --shl:    0 8px 32px rgba(0,0,0,0.12);
+  }
+
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+  /* ── Gate ── */
+  #gate { min-height:100vh; display:flex; align-items:center; justify-content:center; }
+  .gate-card { background:var(--surf); border:1px solid var(--border); border-radius:16px; padding:48px 56px; width:400px; box-shadow:var(--shl); text-align:center; }
+  .gate-logo { font-family:'Cormorant Garamond',serif; font-size:2.2rem; font-weight:700; color:var(--acc); letter-spacing:.04em; margin-bottom:4px; }
+  .gate-logo span { color:var(--gold); }
+  .gate-sub { font-size:.75rem; color:var(--muted); letter-spacing:.12em; text-transform:uppercase; margin-bottom:36px; }
+  .gate-heading { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:600; color:var(--acc); margin-bottom:24px; }
+  .gate-input { width:100%; padding:12px 16px; border:1.5px solid var(--border); border-radius:var(--r); font-family:'Inter',sans-serif; font-size:.9rem; background:var(--bg); color:var(--text); outline:none; transition:border-color .2s; margin-bottom:16px; text-align:center; letter-spacing:.08em; }
+  .gate-input:focus { border-color:var(--acc); }
+  .gate-input.shake { animation:shake .4s ease; border-color:var(--err); }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+  .gate-err { font-size:.8rem; color:var(--err); margin-bottom:12px; min-height:18px; }
+  .btn-primary { width:100%; padding:13px; background:var(--acc); color:#fff; border:none; border-radius:var(--r); font-family:'Inter',sans-serif; font-size:.85rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; cursor:pointer; transition:background .2s,transform .1s; }
+  .btn-primary:hover { background:var(--acc2); }
+  .btn-primary:active { transform:scale(.98); }
+  .btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+
+  /* ── App ── */
+  #app { display:none; min-height:100vh; }
+  .app-header { background:var(--acc); color:#fff; padding:0 32px; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+  .app-logo { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:700; letter-spacing:.04em; }
+  .app-logo span { color:var(--gold2); }
+  .app-title { font-size:.8rem; font-weight:500; letter-spacing:.1em; text-transform:uppercase; opacity:.8; }
+  .btn-logout { font-size:.75rem; color:rgba(255,255,255,.6); cursor:pointer; background:none; border:1px solid rgba(255,255,255,.2); border-radius:6px; padding:6px 14px; font-family:'Inter',sans-serif; transition:all .2s; }
+  .btn-logout:hover { color:#fff; border-color:rgba(255,255,255,.5); }
+
+  /* ── Tabs ── */
+  .tabs-bar { background:var(--surf); border-bottom:1px solid var(--border); padding:0 32px; display:flex; gap:0; }
+  .tab-btn { padding:16px 24px; background:none; border:none; border-bottom:2.5px solid transparent; font-family:'Inter',sans-serif; font-size:.82rem; font-weight:500; color:var(--muted); cursor:pointer; letter-spacing:.04em; transition:all .15s; }
+  .tab-btn:hover { color:var(--text); }
+  .tab-btn.active { color:var(--acc); border-bottom-color:var(--acc); }
+
+  /* ── Tab panels ── */
+  .tab-panel { display:none; padding:32px; max-width:1200px; margin:0 auto; }
+  .tab-panel.active { display:block; }
+
+  /* ── Stats row ── */
+  .stats-row { display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap; }
+  .stat-chip { background:var(--surf); border:1px solid var(--border); border-radius:var(--r); padding:14px 20px; min-width:160px; }
+  .stat-num { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:700; color:var(--acc); line-height:1; }
+  .stat-label { font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-top:4px; }
+
+  /* ── Upload form ── */
+  .card { background:var(--surf); border:1px solid var(--border); border-radius:var(--r); padding:24px 28px; margin-bottom:28px; box-shadow:var(--sh); }
+  .card-title { font-family:'Cormorant Garamond',serif; font-size:1.15rem; font-weight:600; color:var(--acc); margin-bottom:20px; }
+  .form-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; margin-bottom:16px; }
+  .fg { display:flex; flex-direction:column; gap:5px; }
+  .fl { font-size:.7rem; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+  .fi, select.fi { padding:9px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:'Inter',sans-serif; font-size:.85rem; background:var(--bg); color:var(--text); outline:none; transition:border-color .2s; appearance:none; }
+  .fi:focus { border-color:var(--acc); }
+  .file-drop { border:2px dashed var(--border); border-radius:var(--r); padding:28px; text-align:center; cursor:pointer; transition:all .2s; background:var(--bg); }
+  .file-drop:hover, .file-drop.drag-over { border-color:var(--acc); background:rgba(28,59,42,.04); }
+  .file-drop-label { font-size:.85rem; color:var(--muted); margin-bottom:8px; }
+  .file-drop-hint  { font-size:.75rem; color:var(--border); }
+  .file-name-display { font-size:.82rem; color:var(--acc); margin-top:8px; font-weight:500; }
+  .btn-upload { margin-top:16px; padding:11px 28px; background:var(--acc); color:#fff; border:none; border-radius:var(--r); font-family:'Inter',sans-serif; font-size:.82rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; cursor:pointer; transition:background .2s; }
+  .btn-upload:hover { background:var(--acc2); }
+  .btn-upload:disabled { opacity:.5; cursor:not-allowed; }
+
+  /* ── Upload progress bar ── */
+  .upload-progress { margin-top:12px; height:4px; background:var(--border); border-radius:2px; overflow:hidden; display:none; }
+  .upload-progress-bar { height:100%; background:var(--acc); width:0%; transition:width .3s ease; }
+
+  /* ── Layer grid ── */
+  .layer-group-title { font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-weight:600; color:var(--acc); margin:24px 0 12px; border-bottom:1px solid var(--border); padding-bottom:8px; }
+  .layer-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; margin-bottom:8px; }
+  .layer-card { background:var(--surf); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
+  .layer-thumb { width:100%; height:120px; object-fit:cover; background:#EAE6DF; display:block; }
+  .layer-thumb-placeholder { width:100%; height:120px; background:#EAE6DF; display:flex; align-items:center; justify-content:center; font-size:.75rem; color:var(--muted); }
+  .layer-info { padding:10px 12px; }
+  .layer-type-badge { display:inline-block; background:var(--acc); color:#fff; font-size:.65rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:2px 8px; border-radius:4px; margin-bottom:6px; }
+  .layer-meta { font-size:.78rem; color:var(--muted); line-height:1.5; }
+  .layer-actions { padding:8px 12px; border-top:1px solid var(--border); display:flex; gap:8px; }
+  .btn-del { padding:5px 12px; background:transparent; color:var(--err); border:1px solid var(--err); border-radius:6px; font-size:.72rem; font-weight:600; cursor:pointer; transition:all .15s; }
+  .btn-del:hover { background:var(--err); color:#fff; }
+  .layer-empty { color:var(--muted); font-size:.85rem; padding:16px 0; }
+
+  /* ── Pricing table ── */
+  table { width:100%; border-collapse:collapse; }
+  thead th { padding:10px 14px; text-align:left; font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); border-bottom:2px solid var(--border); background:var(--bg); white-space:nowrap; }
+  tbody tr { border-bottom:1px solid var(--border); transition:background .15s; }
+  tbody tr:hover { background:rgba(28,59,42,.03); }
+  tbody td { padding:12px 14px; font-size:.85rem; }
+  .price-cell { display:flex; align-items:center; gap:8px; }
+  .price-display { cursor:pointer; padding:4px 8px; border-radius:6px; border:1.5px solid transparent; font-size:.9rem; font-family:'Inter',sans-serif; transition:border-color .15s; }
+  .price-display:hover { border-color:var(--border); }
+  .price-edit { padding:5px 10px; border:1.5px solid var(--acc); border-radius:6px; font-family:'Inter',sans-serif; font-size:.9rem; width:100px; outline:none; }
+  .btn-save-price { padding:5px 12px; background:var(--acc); color:#fff; border:none; border-radius:6px; font-size:.72rem; font-weight:600; cursor:pointer; }
+  .btn-cancel-price { padding:5px 10px; background:none; color:var(--muted); border:1px solid var(--border); border-radius:6px; font-size:.72rem; cursor:pointer; }
+  .saved-check { color:var(--ok); font-size:.8rem; font-weight:600; }
+
+  /* ── Config table ── */
+  .search-row { display:flex; gap:12px; margin-bottom:20px; align-items:center; }
+  .search-input { flex:1; max-width:320px; padding:9px 14px; border:1.5px solid var(--border); border-radius:var(--r); font-family:'Inter',sans-serif; font-size:.88rem; background:var(--bg); color:var(--text); outline:none; transition:border-color .2s; }
+  .search-input:focus { border-color:var(--acc); }
+  .code-badge { font-family:'Cormorant Garamond',serif; font-weight:700; font-size:1rem; color:var(--acc); letter-spacing:.04em; }
+  td.muted { color:var(--muted); font-size:.8rem; }
+  .btn-row { padding:5px 12px; border:none; border-radius:6px; font-family:'Inter',sans-serif; font-size:.72rem; font-weight:600; cursor:pointer; transition:background .15s; white-space:nowrap; }
+  .btn-row.view    { background:var(--acc); color:#fff; }
+  .btn-row.quote   { background:var(--gold); color:#fff; }
+  .btn-row.pdf     { background:#4A4A4A; color:#fff; }
+  .btn-row:hover   { opacity:.85; }
+  .row-actions     { display:flex; gap:6px; }
+
+  /* ── Products tab ── */
+  .product-tree { margin-bottom:28px; }
+  .brand-header { background:var(--acc); color:#fff; border-radius:var(--r) var(--r) 0 0; padding:12px 18px; font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:600; }
+  .styles-wrap  { border:1px solid var(--border); border-top:none; border-radius:0 0 var(--r) var(--r); overflow:hidden; }
+  .style-row    { padding:12px 18px; border-bottom:1px solid var(--border); }
+  .style-row:last-child { border-bottom:none; }
+  .style-name   { font-weight:600; font-size:.9rem; margin-bottom:6px; color:var(--acc); }
+  .sizes-list   { display:flex; gap:8px; flex-wrap:wrap; }
+  .size-chip    { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:3px 10px; font-size:.78rem; color:var(--muted); }
+  .swatches-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+  .swatch-item  { display:flex; align-items:center; gap:6px; }
+  .swatch-dot   { width:20px; height:20px; border-radius:50%; border:1px solid var(--border); flex-shrink:0; }
+  .swatch-name  { font-size:.8rem; }
+  .product-section-title { font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:600; color:var(--acc); margin:28px 0 16px; }
+  .option-chips { display:flex; gap:8px; flex-wrap:wrap; }
+  .option-chip  { background:var(--surf); border:1px solid var(--border); border-radius:8px; padding:6px 14px; font-size:.82rem; color:var(--text); }
+  .admin-note   { background:#FEF9F0; border:1px solid #E8D8A0; border-radius:var(--r); padding:14px 18px; font-size:.82rem; color:var(--warn); margin-top:28px; }
+
+  /* ── Utility ── */
+  .spinner { width:16px; height:16px; border:2.5px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; display:inline-block; vertical-align:middle; }
+  .inline-spinner { width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--acc); border-radius:50%; animation:spin .7s linear infinite; display:inline-block; vertical-align:middle; margin-right:6px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .msg-err { background:#FDF2F2; border:1px solid #E8C4C4; color:var(--err); border-radius:8px; padding:12px 16px; font-size:.85rem; margin-top:12px; }
+  .msg-ok  { background:#F0FAF4; border:1px solid #A8D8B8; color:var(--ok);  border-radius:8px; padding:12px 16px; font-size:.85rem; margin-top:12px; }
+  .empty-state { text-align:center; padding:48px 24px; color:var(--muted); font-size:.9rem; }
+  .table-wrap { overflow-x:auto; }
+  .count-badge { font-size:.8rem; color:var(--muted); margin-left:8px; }
+
+  /* ── Toast ── */
+  #toast { position:fixed; bottom:32px; left:50%; transform:translateX(-50%); background:var(--acc); color:#fff; padding:10px 22px; border-radius:100px; font-size:.82rem; font-weight:500; z-index:9999; opacity:0; pointer-events:none; transition:opacity .3s; box-shadow:0 4px 16px rgba(0,0,0,.15); }
+</style>
+</head>
+<body>
+
+<!-- GATE -->
+<div id="gate">
+  <div class="gate-card">
+    <div class="gate-logo">elt<span>ru</span></div>
+    <div class="gate-sub">eltru.com</div>
+    <div class="gate-heading">Admin Access</div>
+    <input type="password" id="gate-pw" class="gate-input" placeholder="Admin password" autocomplete="current-password">
+    <div class="gate-err" id="gate-err"></div>
+    <button class="btn-primary" id="gate-btn" onclick="submitPassword()">Enter</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header class="app-header">
+    <div class="app-logo">elt<span>ru</span></div>
+    <div class="app-title">Admin Panel</div>
+    <button class="btn-logout" onclick="logout()">Log out</button>
+  </header>
+
+  <nav class="tabs-bar">
+    <button class="tab-btn active" onclick="showTab('layers')">Layer Assets</button>
+    <button class="tab-btn"        onclick="showTab('pricing')">Pricing</button>
+    <button class="tab-btn"        onclick="showTab('configs')">Configurations</button>
+    <button class="tab-btn"        onclick="showTab('products')">Products</button>
+  </nav>
+
+  <!-- ── TAB 1: LAYER ASSETS ── -->
+  <div id="tab-layers" class="tab-panel active">
+    <div class="stats-row">
+      <div class="stat-chip">
+        <div class="stat-num" id="stat-total">—</div>
+        <div class="stat-label">Layers uploaded</div>
+      </div>
+      <div class="stat-chip">
+        <div class="stat-num" id="stat-types">—</div>
+        <div class="stat-label">Layer types covered</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Upload Layer Image</div>
+      <div class="form-row">
+        <div class="fg">
+          <label class="fl">Brand</label>
+          <select class="fi" id="up-brand" onchange="onBrandChange()">
+            <option value="">— Select brand —</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Style</label>
+          <select class="fi" id="up-style">
+            <option value="">— Select style —</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl">Layer Type</label>
+          <select class="fi" id="up-type" onchange="onTypeChange()">
+            <option value="">— Select type —</option>
+            <option value="background">background</option>
+            <option value="worksurface">worksurface</option>
+            <option value="panel">panel (fabric)</option>
+            <option value="trim">trim (color)</option>
+            <option value="glass">glass</option>
+            <option value="pedestal">pedestal</option>
+          </select>
+        </div>
+        <div class="fg" id="up-option-wrap" style="display:none;">
+          <label class="fl" id="up-option-label">Option</label>
+          <select class="fi" id="up-option">
+            <option value="">— Select option —</option>
+          </select>
+        </div>
+        <div class="fg" id="up-height-wrap" style="display:none;">
+          <label class="fl">Height (optional)</label>
+          <select class="fi" id="up-height">
+            <option value="">None</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="file-drop" id="file-drop" onclick="document.getElementById('file-input').click()"
+           ondragover="event.preventDefault(); this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="handleDrop(event)">
+        <div class="file-drop-label">Click to choose or drag a file here</div>
+        <div class="file-drop-hint">Accepts .webp or .png</div>
+        <div class="file-name-display" id="file-name-display"></div>
+      </div>
+      <input type="file" id="file-input" accept=".webp,.png,image/webp,image/png" style="display:none" onchange="onFileChange(this)">
+
+      <div class="upload-progress" id="upload-progress">
+        <div class="upload-progress-bar" id="upload-progress-bar"></div>
+      </div>
+
+      <button class="btn-upload" id="btn-upload" onclick="doUpload()">Upload Layer</button>
+      <div id="upload-msg"></div>
+    </div>
+
+    <div id="layers-grid-wrap">
+      <div style="color:var(--muted); font-size:.9rem; padding:8px 0;">
+        <span class="inline-spinner"></span> Loading layers…
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 2: PRICING ── -->
+  <div id="tab-pricing" class="tab-panel">
+    <div class="card">
+      <div class="card-title">Pricing Rules</div>
+      <p style="font-size:.82rem; color:var(--muted); margin-bottom:20px;">
+        Click a price to edit it inline. Press Enter or ✓ to save.
+      </p>
+      <div class="table-wrap">
+        <table id="pricing-table">
+          <thead>
+            <tr>
+              <th>Label</th>
+              <th>Type</th>
+              <th>Price (USD)</th>
+              <th>Updated</th>
+            </tr>
+          </thead>
+          <tbody id="pricing-tbody">
+            <tr><td colspan="4" style="padding:24px; color:var(--muted);">
+              <span class="inline-spinner"></span> Loading…
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 3: CONFIGURATIONS ── -->
+  <div id="tab-configs" class="tab-panel">
+    <div class="search-row">
+      <input type="text" id="config-search" class="search-input" placeholder="Search by code or client…" oninput="filterConfigs()">
+      <span class="count-badge" id="config-count"></span>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Client</th>
+              <th>Notes</th>
+              <th>Price</th>
+              <th>Qty</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="configs-tbody">
+            <tr><td colspan="7" style="padding:24px; color:var(--muted);">
+              <span class="inline-spinner"></span> Loading…
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB 4: PRODUCTS ── -->
+  <div id="tab-products" class="tab-panel">
+    <div id="products-body">
+      <div style="color:var(--muted); font-size:.9rem; padding:8px 0;">
+        <span class="inline-spinner"></span> Loading product data…
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────
+let adminPw    = '';
+let OPTIONS    = null;   // from /api/options
+let ALL_LAYERS = [];     // from /api/admin/layers
+let ALL_CONFIGS = [];
+let allConfigsRaw = [];
+
+// ── Gate ──────────────────────────────────────────────────────────────────
+document.getElementById('gate-pw').addEventListener('keydown', e => {
+  if (e.key === 'Enter') submitPassword();
+});
+
+async function submitPassword() {
+  const pw = document.getElementById('gate-pw').value.trim();
+  if (!pw) return;
+  const btn   = document.getElementById('gate-btn');
+  const errEl = document.getElementById('gate-err');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>';
+  errEl.textContent = '';
+
+  try {
+    const res  = await fetch('/api/auth/admin', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      adminPw = pw;
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('app').style.display  = 'block';
+      loadAll();
+    } else {
+      errEl.textContent = 'Incorrect password.';
+      const inp = document.getElementById('gate-pw');
+      inp.classList.add('shake');
+      inp.addEventListener('animationend', () => inp.classList.remove('shake'), { once: true });
+      inp.value = ''; inp.focus();
+    }
+  } catch { errEl.textContent = 'Connection error.'; }
+  finally  { btn.disabled = false; btn.textContent = 'Enter'; }
+}
+
+function logout() {
+  adminPw = '';
+  document.getElementById('gate').style.display = 'flex';
+  document.getElementById('app').style.display  = 'none';
+  document.getElementById('gate-pw').value = '';
+}
+
+// ── Load everything ────────────────────────────────────────────────────────
+async function loadAll() {
+  await Promise.all([loadOptions(), loadLayers(), loadConfigs(), loadPricing()]);
+}
+
+async function loadOptions() {
+  try {
+    const res = await fetch('/api/options');
+    OPTIONS = await res.json();
+    populateUploadForm();
+    renderProducts();
+  } catch (err) {
+    console.error('options load failed', err);
+  }
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────
+function showTab(name) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    const names = ['layers','pricing','configs','products'];
+    b.classList.toggle('active', names[i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+let _toastT;
+function toast(msg, ok = true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = ok ? 'var(--ok)' : 'var(--err)';
+  t.style.opacity = '1';
+  clearTimeout(_toastT);
+  _toastT = setTimeout(() => t.style.opacity = '0', 2500);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// TAB 1 — LAYER ASSETS
+// ─────────────────────────────────────────────────────────────────────────
+async function loadLayers() {
+  try {
+    const res  = await fetch('/api/admin/layers', { headers: { 'Authorization': adminPw } });
+    const data = await res.json();
+    ALL_LAYERS = data.layers || [];
+    renderLayerStats();
+    renderLayerGrid();
+  } catch (err) {
+    document.getElementById('layers-grid-wrap').innerHTML =
+      `<div class="msg-err">Failed to load layers: ${err.message}</div>`;
+  }
+}
+
+function renderLayerStats() {
+  document.getElementById('stat-total').textContent = ALL_LAYERS.length;
+  const types = new Set(ALL_LAYERS.map(l => l.layer_type));
+  document.getElementById('stat-types').textContent = types.size;
+}
+
+function renderLayerGrid() {
+  const wrap = document.getElementById('layers-grid-wrap');
+  if (!ALL_LAYERS.length) { wrap.innerHTML = '<div class="empty-state">No layers uploaded yet.</div>'; return; }
+
+  // Group by brand_id → style_id → layer_type
+  const groups = {};
+  for (const l of ALL_LAYERS) {
+    const key = `${l.brand_id}__${l.style_id}`;
+    if (!groups[key]) groups[key] = { brand_id: l.brand_id, style_id: l.style_id, layers: [] };
+    groups[key].layers.push(l);
+  }
+
+  let html = '';
+  for (const g of Object.values(groups)) {
+    const brand = OPTIONS?.brands?.find(b => b.id === g.brand_id);
+    const style = brand?.styles?.find(s => s.id === g.style_id);
+    html += `<div class="layer-group-title">${brand?.name || g.brand_id} — ${style?.name || g.style_id}</div>`;
+    html += '<div class="layer-grid">';
+    for (const l of g.layers) {
+      const optLabel = resolveOptionLabel(l);
+      html += `
+        <div class="layer-card" id="layer-card-${l.id}">
+          <img class="layer-thumb" src="${l.storage_url}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="layer-thumb-placeholder" style="display:none">No image</div>
+          <div class="layer-info">
+            <span class="layer-type-badge">${l.layer_type}</span>
+            <div class="layer-meta">${optLabel ? optLabel : (l.storage_path || '')}</div>
+          </div>
+          <div class="layer-actions">
+            <button class="btn-del" onclick="deleteLayer('${l.id}','${escHtml(l.storage_path || '')}')">Delete</button>
+          </div>
+        </div>`;
+    }
+    html += '</div>';
+  }
+
+  wrap.innerHTML = html;
+}
+
+function resolveOptionLabel(l) {
+  if (!OPTIONS) return null;
+  if (l.fabric_id)   return OPTIONS.fabrics?.find(f => f.id === l.fabric_id)?.name || null;
+  if (l.trim_id)     return OPTIONS.trims?.find(t => t.id === l.trim_id)?.name || null;
+  if (l.glass_id)    return OPTIONS.glass_options?.find(g => g.id === l.glass_id)?.name || null;
+  if (l.pedestal_id) return OPTIONS.pedestals?.find(p => p.id === l.pedestal_id)?.name || null;
+  return null;
+}
+
+async function deleteLayer(id, storagePath) {
+  if (!confirm(`Delete this layer image?\n${storagePath || id}`)) return;
+  try {
+    const res  = await fetch(`/api/admin/layers/${id}`, {
+      method: 'DELETE', headers: { 'Authorization': adminPw },
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    ALL_LAYERS = ALL_LAYERS.filter(l => l.id !== id);
+    document.getElementById(`layer-card-${id}`)?.remove();
+    renderLayerStats();
+    toast('Layer deleted');
+  } catch (err) { toast('Delete failed: ' + err.message, false); }
+}
+
+// Upload form ───────────────────────────────────────────────────────────────
+function populateUploadForm() {
+  if (!OPTIONS) return;
+  const brandSel = document.getElementById('up-brand');
+  brandSel.innerHTML = '<option value="">— Select brand —</option>' +
+    (OPTIONS.brands || []).map(b => `<option value="${b.slug}">${b.name}</option>`).join('');
+}
+
+function onBrandChange() {
+  const brandSlug = document.getElementById('up-brand').value;
+  const styleSel  = document.getElementById('up-style');
+  const heightSel = document.getElementById('up-height');
+
+  const brand = OPTIONS?.brands?.find(b => b.slug === brandSlug);
+  styleSel.innerHTML  = '<option value="">— Select style —</option>' +
+    (brand?.styles || []).map(s => `<option value="${s.slug}">${s.name}</option>`).join('');
+
+  const heights = OPTIONS?.heights?.[brandSlug] || [];
+  heightSel.innerHTML = '<option value="">None</option>' +
+    heights.map(h => `<option value="${h.slug || h.label}">${h.label}</option>`).join('');
+}
+
+function onTypeChange() {
+  const type     = document.getElementById('up-type').value;
+  const optWrap  = document.getElementById('up-option-wrap');
+  const optSel   = document.getElementById('up-option');
+  const optLabel = document.getElementById('up-option-label');
+  const htWrap   = document.getElementById('up-height-wrap');
+
+  const optionTypes = { panel: 'fabrics', trim: 'trims', glass: 'glass_options', pedestal: 'pedestals' };
+
+  if (optionTypes[type]) {
+    const items  = OPTIONS?.[optionTypes[type]] || [];
+    const labels = { panel: 'Fabric', trim: 'Trim Color', glass: 'Glass Option', pedestal: 'Pedestal' };
+    optLabel.textContent = labels[type] || 'Option';
+    optSel.innerHTML = '<option value="">— Select option —</option>' +
+      items.map(i => `<option value="${i.slug}">${i.name}</option>`).join('');
+    optWrap.style.display = '';
+  } else {
+    optWrap.style.display = 'none';
+  }
+
+  htWrap.style.display = type && type !== 'background' ? '' : 'none';
+}
+
+let selectedFile = null;
+
+function onFileChange(input) {
+  selectedFile = input.files[0] || null;
+  document.getElementById('file-name-display').textContent = selectedFile ? selectedFile.name : '';
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('file-drop').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) {
+    selectedFile = file;
+    document.getElementById('file-name-display').textContent = file.name;
+  }
+}
+
+async function doUpload() {
+  const brandSlug  = document.getElementById('up-brand').value;
+  const styleSlug  = document.getElementById('up-style').value;
+  const layerType  = document.getElementById('up-type').value.split(' ')[0]; // strip "(fabric)" etc
+  const optionSlug = document.getElementById('up-option').value;
+  const heightSlug = document.getElementById('up-height').value;
+
+  if (!brandSlug || !styleSlug || !layerType) {
+    showUploadMsg('Please select brand, style, and layer type.', false); return;
+  }
+  if (!selectedFile) { showUploadMsg('Please choose a file.', false); return; }
+
+  const btn = document.getElementById('btn-upload');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Uploading…';
+  showUploadMsg('');
+
+  const bar = document.getElementById('upload-progress');
+  const barFill = document.getElementById('upload-progress-bar');
+  bar.style.display = 'block';
+  barFill.style.width = '30%';
+
+  const fd = new FormData();
+  fd.append('brand_slug',  brandSlug);
+  fd.append('style_slug',  styleSlug);
+  fd.append('layer_type',  layerType);
+  fd.append('option_slug', optionSlug || '');
+  fd.append('height_slug', heightSlug || '');
+  fd.append('file',        selectedFile);
+
+  try {
+    barFill.style.width = '60%';
+    const res  = await fetch('/api/admin/layers/upload', {
+      method: 'POST',
+      headers: { 'Authorization': adminPw },
+      body: fd,
+    });
+    const data = await res.json();
+    barFill.style.width = '100%';
+
+    if (!data.success) throw new Error(data.error);
+    showUploadMsg(`Uploaded! URL: ${data.storage_url}`, true);
+    selectedFile = null;
+    document.getElementById('file-name-display').textContent = '';
+    document.getElementById('file-input').value = '';
+    toast('Layer uploaded successfully');
+    await loadLayers();
+  } catch (err) {
+    showUploadMsg('Upload failed: ' + err.message, false);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Upload Layer';
+    setTimeout(() => { bar.style.display = 'none'; barFill.style.width = '0%'; }, 1000);
+  }
+}
+
+function showUploadMsg(msg, ok = true) {
+  const el = document.getElementById('upload-msg');
+  if (!msg) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="${ok ? 'msg-ok' : 'msg-err'}">${msg}</div>`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// TAB 2 — PRICING
+// ─────────────────────────────────────────────────────────────────────────
+async function loadPricing() {
+  try {
+    const res  = await fetch('/api/admin/pricing', { headers: { 'Authorization': adminPw } });
+    const data = await res.json();
+    renderPricingTable(data.pricing || []);
+  } catch (err) {
+    document.getElementById('pricing-tbody').innerHTML =
+      `<tr><td colspan="4"><div class="msg-err">Failed: ${err.message}</div></td></tr>`;
+  }
+}
+
+function renderPricingTable(rows) {
+  document.getElementById('pricing-tbody').innerHTML = rows.map(p => {
+    const date = p.updated_at
+      ? new Date(p.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+      : '—';
+    const typeLabel = p.brand_id ? 'Base' : p.glass_id ? 'Glass add-on' : p.pedestal_id ? 'Pedestal add-on' : 'Add-on';
+    return `<tr id="price-row-${p.id}">
+      <td>${p.label || '—'}</td>
+      <td style="color:var(--muted)">${typeLabel}</td>
+      <td>
+        <div class="price-cell" id="price-cell-${p.id}">
+          <span class="price-display" title="Click to edit" onclick="editPrice('${p.id}','${p.price_usd}')">
+            $${Number(p.price_usd).toLocaleString('en-US',{minimumFractionDigits:0})}
+          </span>
+        </div>
+      </td>
+      <td class="muted">${date}</td>
+    </tr>`;
+  }).join('');
+}
+
+function editPrice(id, current) {
+  const cell = document.getElementById(`price-cell-${id}`);
+  cell.innerHTML = `
+    <input class="price-edit" id="price-inp-${id}" type="number" value="${current}" min="0">
+    <button class="btn-save-price" onclick="savePrice('${id}')">✓</button>
+    <button class="btn-cancel-price" onclick="loadPricing()">✕</button>`;
+  const inp = document.getElementById(`price-inp-${id}`);
+  inp.focus(); inp.select();
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') savePrice(id); if (e.key === 'Escape') loadPricing(); });
+}
+
+async function savePrice(id) {
+  const inp = document.getElementById(`price-inp-${id}`);
+  const val = parseFloat(inp?.value);
+  if (isNaN(val)) return;
+
+  const cell = document.getElementById(`price-cell-${id}`);
+  cell.innerHTML = '<span class="inline-spinner"></span>';
+
+  try {
+    const res  = await fetch(`/api/admin/pricing/${id}`, {
+      method: 'PUT',
+      headers: { 'Authorization': adminPw, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ price_usd: val }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+    cell.innerHTML = `
+      <span class="price-display" title="Click to edit" onclick="editPrice('${id}','${val}')">
+        $${val.toLocaleString('en-US',{minimumFractionDigits:0})}
+      </span>
+      <span class="saved-check">✓ Saved</span>`;
+    setTimeout(() => {
+      const check = cell.querySelector('.saved-check');
+      if (check) check.remove();
+    }, 2500);
+    toast('Price updated');
+  } catch (err) {
+    cell.innerHTML = `<div class="msg-err">${err.message}</div>`;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// TAB 3 — CONFIGURATIONS
+// ─────────────────────────────────────────────────────────────────────────
+async function loadConfigs() {
+  try {
+    const res  = await fetch('/api/admin/configs', { headers: { 'Authorization': adminPw } });
+    const data = await res.json();
+    allConfigsRaw = data.configs || [];
+    renderConfigsTable(allConfigsRaw);
+  } catch (err) {
+    document.getElementById('configs-tbody').innerHTML =
+      `<tr><td colspan="7"><div class="msg-err">Failed: ${err.message}</div></td></tr>`;
+  }
+}
+
+function filterConfigs() {
+  const q = document.getElementById('config-search').value.toLowerCase().trim();
+  const filtered = q
+    ? allConfigsRaw.filter(c =>
+        c.config_code?.toLowerCase().includes(q) ||
+        c.client_name?.toLowerCase().includes(q) ||
+        c.client_company?.toLowerCase().includes(q))
+    : allConfigsRaw;
+  renderConfigsTable(filtered);
+}
+
+function renderConfigsTable(configs) {
+  document.getElementById('config-count').textContent =
+    `${configs.length} config${configs.length !== 1 ? 's' : ''}`;
+
+  if (!configs.length) {
+    document.getElementById('configs-tbody').innerHTML =
+      '<tr><td colspan="7" class="empty-state">No configurations found.</td></tr>';
+    return;
+  }
+
+  document.getElementById('configs-tbody').innerHTML = configs.map(c => {
+    const date   = new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const price  = c.total_price_usd ?? c.base_price_usd;
+    const priceS = price ? `$${Number(price).toLocaleString('en-US',{minimumFractionDigits:0})}` : '—';
+    const client = c.client_name || c.client_company || '—';
+    const notes  = c.notes ? c.notes.substring(0,40) + (c.notes.length > 40 ? '…' : '') : '—';
+    return `<tr>
+      <td><span class="code-badge">${c.config_code}</span></td>
+      <td>${client}</td>
+      <td class="muted" style="max-width:160px">${notes}</td>
+      <td>${priceS}</td>
+      <td class="muted">${c.quantity || 1}</td>
+      <td class="muted">${date}</td>
+      <td>
+        <div class="row-actions">
+          <button class="btn-row view"  onclick="window.open('/?config=${c.config_code}','_blank')">View</button>
+          <button class="btn-row quote" onclick="window.open('/sales.html?config=${c.config_code}','_blank')">Quote</button>
+          <button class="btn-row pdf"   onclick="downloadPDF('${c.config_code}', this)">PDF</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function downloadPDF(code, btn) {
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    const res  = await fetch('/api/pdf', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config_code: code }),
+    });
+    if (!res.ok) throw new Error('PDF failed');
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `eltru-${code}.pdf`; a.click();
+    URL.revokeObjectURL(url);
+    toast('PDF downloaded');
+  } catch (err) { toast('PDF failed: ' + err.message, false); }
+  finally { btn.disabled = false; btn.textContent = orig; }
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// TAB 4 — PRODUCTS
+// ─────────────────────────────────────────────────────────────────────────
+function renderProducts() {
+  if (!OPTIONS) return;
+  const wrap = document.getElementById('products-body');
+
+  let html = '';
+
+  // Brands → styles → sizes tree
+  html += '<div class="product-section-title">Brands &amp; Styles</div>';
+  for (const brand of (OPTIONS.brands || [])) {
+    html += `<div class="product-tree">
+      <div class="brand-header">${brand.name} <small style="opacity:.7;font-size:.8rem">${brand.slug}</small></div>
+      <div class="styles-wrap">`;
+    for (const style of (brand.styles || [])) {
+      html += `<div class="style-row">
+        <div class="style-name">${style.name} <span style="font-weight:400;color:var(--muted);font-size:.8rem">${style.slug}</span></div>
+        <div class="sizes-list">
+          ${(style.sizes || []).map(sz =>
+            `<span class="size-chip">${sz.label}</span>`
+          ).join('')}
+        </div>
+      </div>`;
+    }
+    html += '</div></div>';
+  }
+
+  // Heights
+  html += '<div class="product-section-title">Panel Heights</div>';
+  for (const [brand, heights] of Object.entries(OPTIONS.heights || {})) {
+    html += `<div style="margin-bottom:16px">
+      <div style="font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">${brand}</div>
+      <div class="option-chips">${(heights || []).map(h =>
+        `<span class="option-chip">${h.label} (${h.height_in}")</span>`
+      ).join('')}</div>
+    </div>`;
+  }
+
+  // Fabrics with swatches
+  html += '<div class="product-section-title">Fabrics</div>';
+  html += '<div class="swatches-row">';
+  for (const f of (OPTIONS.fabrics || [])) {
+    html += `<div class="swatch-item">
+      <div class="swatch-dot" style="background:${f.hex_color}"></div>
+      <span class="swatch-name">${f.name}</span>
+    </div>`;
+  }
+  html += '</div>';
+
+  // Trims with swatches
+  html += '<div class="product-section-title">Trims</div>';
+  html += '<div class="swatches-row">';
+  for (const t of (OPTIONS.trims || [])) {
+    html += `<div class="swatch-item">
+      <div class="swatch-dot" style="background:${t.hex_color}"></div>
+      <span class="swatch-name">${t.name}</span>
+    </div>`;
+  }
+  html += '</div>';
+
+  // Glass options
+  html += '<div class="product-section-title">Glass Options</div>';
+  html += '<div class="option-chips">';
+  for (const g of (OPTIONS.glass_options || [])) {
+    html += `<span class="option-chip">${g.name}</span>`;
+  }
+  html += '</div>';
+
+  // Pedestals
+  html += '<div class="product-section-title">Pedestals / Storage</div>';
+  html += '<div class="option-chips">';
+  for (const p of (OPTIONS.pedestals || [])) {
+    html += `<span class="option-chip">${p.name}</span>`;
+  }
+  html += '</div>';
+
+  html += `<div class="admin-note">
+    To add new brands, styles, or options: update the database via the
+    <strong>Supabase dashboard</strong> or re-run <code>node db/seed.js</code>.
+    Layer images can be uploaded above in the Layer Assets tab.
+  </div>`;
+
+  wrap.innerHTML = html;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function escHtml(str) {
+  return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ── Boot with pre-loaded sales.html config param ─────────────────────────
+// (sales.html passes ?config=CODE so admin can jump straight to that config)
+const _urlCfg = new URLSearchParams(location.search).get('config');
+if (_urlCfg) {
+  // Pre-fill config search once app loads
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('config-search').value = _urlCfg;
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eltru — Your Quote</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:           #F4F1EC;
+      --white:        #FFFFFF;
+      --border:       #E0DCD4;
+      --text:         #1C1A17;
+      --muted:        #9A9488;
+      --accent:       #1C3B2A;
+      --accent-light: #E8F0EB;
+      --gold:         #B8965A;
+      --warn:         #C26B2A;
+      --radius:       10px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh;
+    }
+
+    /* ── LOADING / ERROR STATES ──────────────────────────── */
+    .full-center {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .state-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px 40px;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .state-logo {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 26px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.04em;
+      margin-bottom: 24px;
+    }
+
+    .state-icon {
+      font-size: 40px;
+      margin-bottom: 16px;
+    }
+
+    .state-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 26px;
+      font-weight: 400;
+      margin-bottom: 12px;
+    }
+
+    .state-msg {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .state-link {
+      display: inline-block;
+      padding: 10px 22px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: var(--radius);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .spinner {
+      width: 32px; height: 32px;
+      border: 2.5px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── HEADER ──────────────────────────────────────────── */
+    header {
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 0 32px;
+    }
+
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .logo {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 22px;
+      font-weight: 500;
+      color: var(--text);
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .logo span { color: var(--gold); }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .quote-code-badge {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+    }
+
+    .expiry-badge {
+      font-size: 11.5px;
+      font-weight: 500;
+      padding: 4px 10px;
+      border-radius: 100px;
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    .expiry-badge.warning {
+      background: #FFF3EC;
+      color: var(--warn);
+    }
+
+    /* ── MAIN CONTENT ────────────────────────────────────── */
+    .main-wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 36px 32px 64px;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 28px;
+      align-items: start;
+    }
+
+    /* ── LEFT: Visual + Specs ────────────────────────────── */
+    .visual-wrap {
+      background: #EAE6DF;
+      border-radius: var(--radius);
+      height: 320px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .visual-wrap svg {
+      width: 78%;
+      height: auto;
+      position: relative;
+      z-index: 2;
+      filter: drop-shadow(0 12px 40px rgba(0,0,0,0.07));
+    }
+
+    .layer {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .layer-multiply { mix-blend-mode: multiply; }
+
+    .spec-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .spec-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      background: #FAFAF8;
+    }
+
+    .spec-header-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .spec-row:last-child { border-bottom: none; }
+    .spec-row .sr-key { color: var(--muted); font-size: 12.5px; }
+    .spec-row .sr-val { font-size: 12.5px; font-weight: 500; }
+
+    /* ── RIGHT: Quote card ───────────────────────────────── */
+    .quote-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      position: sticky;
+      top: 76px;
+    }
+
+    .qc-header {
+      background: var(--accent);
+      padding: 20px 24px;
+      color: #fff;
+    }
+
+    .qc-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 22px;
+      font-weight: 400;
+      margin-bottom: 4px;
+    }
+
+    .qc-by {
+      font-size: 12px;
+      opacity: 0.75;
+    }
+
+    .qc-body { padding: 20px 24px; }
+
+    /* Client notes */
+    .client-notes-box {
+      background: var(--accent-light);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 6px 6px 0;
+      padding: 12px 14px;
+      margin-bottom: 18px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text);
+    }
+
+    /* Price breakdown */
+    .breakdown {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 18px;
+    }
+
+    .bd-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+
+    .bd-row:last-child { border-bottom: none; }
+    .bd-row .bd-lbl  { color: var(--muted); }
+    .bd-row .bd-val  { font-weight: 500; }
+    .bd-row.bd-total { background: #FAFAF8; }
+    .bd-row.bd-total .bd-lbl { color: var(--text); font-weight: 600; font-size: 14px; }
+    .bd-row.bd-total .bd-val { color: var(--accent); font-family: 'Cormorant Garamond', Georgia, serif; font-size: 24px; font-weight: 600; }
+    .bd-row.bd-divider { background: var(--border); height: 1px; padding: 0; }
+
+    /* CTA buttons */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 13px 20px;
+      border-radius: var(--radius);
+      font-family: 'Inter', sans-serif;
+      font-size: 13.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: none;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .btn-primary   { background: var(--accent); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: #244d36; }
+    .btn-secondary { background: var(--white); color: var(--text); border: 1.5px solid var(--border); }
+    .btn-secondary:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .btn:disabled  { opacity: 0.45; cursor: not-allowed; }
+
+    .accepted-msg {
+      background: var(--accent-light);
+      border: 1.5px solid var(--accent);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      color: var(--accent);
+      font-weight: 500;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .accepted-msg .check-icon {
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+
+    /* ── FOOTER ──────────────────────────────────────────── */
+    .page-footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 32px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .page-footer a { color: var(--accent); text-decoration: none; }
+
+    /* ── MOBILE ──────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      header { padding: 0 16px; }
+      .main-wrap { padding: 20px 16px 48px; }
+      .content-grid { grid-template-columns: 1fr; }
+      .quote-card { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Loading state (shown initially) -->
+<div class="full-center" id="loading-view">
+  <div class="state-card">
+    <div class="state-logo">Eltru<span style="color:#B8965A">.</span></div>
+    <div class="spinner"></div>
+    <div class="state-msg">Loading your quote&hellip;</div>
+  </div>
+</div>
+
+<!-- Error / expired states (hidden initially) -->
+<div class="full-center" id="error-view" style="display:none">
+  <div class="state-card">
+    <div class="state-logo">Eltru<span style="color:#B8965A">.</span></div>
+    <div class="state-icon" id="error-icon">⏱</div>
+    <div class="state-title" id="error-title">This quote has expired</div>
+    <div class="state-msg" id="error-msg">
+      This quote link is no longer active. Please contact your Eltru representative
+      or request a new quote below.
+    </div>
+    <a href="mailto:hello@eltru.com?subject=New Quote Request" class="state-link">
+      Request a New Quote
+    </a>
+  </div>
+</div>
+
+<!-- Main quote view (hidden initially) -->
+<div id="quote-view" style="display:none">
+  <header>
+    <div class="header-inner">
+      <a class="logo" href="/">Eltru<span>.</span></a>
+      <div class="header-meta">
+        <span class="quote-code-badge" id="hdr-code"></span>
+        <span class="expiry-badge" id="expiry-badge"></span>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-wrap">
+    <div class="content-grid">
+
+      <!-- LEFT -->
+      <div>
+        <!-- Visual -->
+        <div class="visual-wrap">
+          <svg id="cubicle-svg" viewBox="0 0 520 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="320" width="520" height="80" fill="#DEDAD2"/>
+            <ellipse cx="278" cy="326" rx="198" ry="9" fill="rgba(0,0,0,0.06)"/>
+            <rect x="80" y="48" width="360" height="272" rx="5" id="svg-panel-back" fill="#C8C3BB"/>
+            <rect x="80" y="48" width="360" height="272" rx="5" fill="none" id="svg-trim-back" stroke="#E2DDD6" stroke-width="10"/>
+            <line x1="88" y1="196" x2="432" y2="196" stroke="rgba(0,0,0,0.05)" stroke-width="1.5"/>
+            <line x1="196" y1="56" x2="196" y2="312" stroke="rgba(0,0,0,0.05)" stroke-width="1.5"/>
+            <line x1="320" y1="56" x2="320" y2="312" stroke="rgba(0,0,0,0.05)" stroke-width="1.5"/>
+            <path d="M 80 48 L 80 320 L 28 288 L 28 20 Z" id="svg-panel-left" fill="#BDB8B0"/>
+            <path d="M 80 48 L 80 320 L 28 288 L 28 20 Z" fill="none" id="svg-trim-left" stroke="#DDD8D0" stroke-width="8"/>
+            <rect x="80" y="292" width="360" height="32" rx="3" fill="#D0CBC3"/>
+            <rect x="80" y="320" width="360" height="6" rx="2" fill="#B8B3AB"/>
+            <path d="M 28 266 L 80 294 L 80 320 L 28 292 Z" fill="#C8C3BB"/>
+            <rect x="92" y="322" width="7" height="52" rx="2" fill="#A8A4A0"/>
+            <rect x="421" y="322" width="7" height="52" rx="2" fill="#A8A4A0"/>
+            <rect x="88" y="56" width="344" height="180" rx="3" id="svg-glass" fill="rgba(180,210,235,0.2)" stroke="rgba(160,200,225,0.6)" stroke-width="1.5" style="display:none"/>
+            <rect x="372" y="294" width="68" height="82" rx="4" id="svg-pedestal" fill="#C0BBB3" style="display:none"/>
+            <rect x="372" y="294" width="68" height="14" rx="4" id="svg-pedestal-top" fill="#D0CBC3" style="display:none"/>
+          </svg>
+          <img id="layer-bg"          class="layer"               src="" alt="" style="display:none">
+          <img id="layer-panel"       class="layer layer-multiply" src="" alt="" style="display:none">
+          <img id="layer-trim"        class="layer layer-multiply" src="" alt="" style="display:none">
+          <img id="layer-worksurface" class="layer layer-multiply" src="" alt="" style="display:none">
+          <img id="layer-glass"       class="layer layer-multiply" src="" alt="" style="display:none">
+          <img id="layer-pedestal"    class="layer layer-multiply" src="" alt="" style="display:none">
+        </div>
+
+        <!-- Spec card -->
+        <div class="spec-card">
+          <div class="spec-header">
+            <div class="spec-header-title">Configuration Specification</div>
+          </div>
+          <div id="spec-rows"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Quote card -->
+      <div>
+        <div class="quote-card">
+          <div class="qc-header">
+            <div class="qc-title">Your Custom Quote</div>
+            <div class="qc-by" id="qc-by"></div>
+          </div>
+          <div class="qc-body">
+            <div id="notes-section"></div>
+            <div class="breakdown" id="breakdown"></div>
+            <div id="cta-section">
+              <button class="btn btn-primary"   id="btn-accept"  onclick="acceptQuote()">Accept This Quote</button>
+              <button class="btn btn-secondary"  id="btn-pdf"     onclick="downloadPDF()">Download PDF</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    Questions? Contact us at <a href="mailto:hello@eltru.com">hello@eltru.com</a>
+    &nbsp;·&nbsp; <a href="https://eltru.com">eltru.com</a>
+  </div>
+</div>
+
+<script>
+const params     = new URLSearchParams(window.location.search);
+const token      = params.get('token');
+let   configCode = '';
+let   quoteData  = null;
+let   configData = null;
+
+async function init() {
+  if (!token) {
+    showError('🔗', 'Invalid Link', 'This quote link is missing a token. Please check the URL you were sent.');
+    return;
+  }
+
+  try {
+    const [quoteRes, optionsRes] = await Promise.all([
+      fetch(`/api/quotes/${token}`).then(r => r.json()),
+      fetch('/api/options').then(r => r.json()),
+    ]);
+
+    if (!quoteRes.success) {
+      const err = quoteRes.error;
+      if (err === 'quote_expired') {
+        showError('⏱', 'This Quote Has Expired',
+          'This quote link has passed its expiry date. Please contact your Eltru representative or request a new quote.');
+      } else if (err === 'quote_inactive') {
+        showError('🚫', 'Quote No Longer Active',
+          'This quote has been deactivated. Please contact your Eltru representative.');
+      } else {
+        showError('🔍', 'Quote Not Found',
+          'We couldn\'t find this quote. Please check the link you were sent.');
+      }
+      return;
+    }
+
+    quoteData  = quoteRes.quote;
+    configData = quoteData.config;
+    configCode = configData.config_code;
+
+    renderQuote(quoteData, optionsRes.pricing || []);
+  } catch (err) {
+    showError('⚠️', 'Something Went Wrong',
+      'Failed to load this quote. Please refresh the page or contact hello@eltru.com.');
+  }
+}
+
+function renderQuote(quote, pricing) {
+  document.getElementById('loading-view').style.display = 'none';
+  document.getElementById('quote-view').style.display   = '';
+
+  const config = quote.config;
+
+  // ── Header ──────────────────────────────────────────────
+  document.getElementById('hdr-code').textContent = `Quote ${config.config_code}`;
+
+  // Expiry badge
+  if (quote.expires_at) {
+    const msLeft    = new Date(quote.expires_at) - Date.now();
+    const daysLeft  = Math.ceil(msLeft / 86400000);
+    const badge     = document.getElementById('expiry-badge');
+    if (daysLeft <= 1) {
+      badge.textContent = 'Expires today!';
+      badge.classList.add('warning');
+    } else {
+      badge.textContent = `Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`;
+    }
+  }
+
+  // ── Quote card header ────────────────────────────────────
+  document.getElementById('qc-by').textContent =
+    quote.salesperson ? `Prepared by ${quote.salesperson}` : 'Prepared by Eltru';
+
+  // ── Client notes ─────────────────────────────────────────
+  if (quote.notes_client) {
+    document.getElementById('notes-section').innerHTML = `
+      <div class="client-notes-box">${escHtml(quote.notes_client)}</div>`;
+  }
+
+  // ── Price breakdown ───────────────────────────────────────
+  const qty = config.quantity || 1;
+
+  const baseRow = pricing.find(p => p.brand_id === config.brand_id && p.style_id === config.style_id);
+  const glassRow = (config.glass && config.glass.slug !== 'none')
+    ? pricing.find(p => p.glass_id === config.glass_id) : null;
+  const pedRow = (config.pedestal && config.pedestal.slug !== 'none')
+    ? pricing.find(p => p.pedestal_id === config.pedestal_id) : null;
+
+  const base  = baseRow?.price_usd  || config.base_price_usd || 0;
+  const glass = glassRow?.price_usd || 0;
+  const ped   = pedRow?.price_usd   || 0;
+
+  let unit = base + glass + ped;
+  const isCustom = !!quote.custom_price_usd;
+  if (isCustom)               unit = quote.custom_price_usd;
+  else if (quote.discount_pct) unit = Math.round(unit * (1 - quote.discount_pct / 100));
+
+  const total = unit * qty;
+  const fmt   = v => '$' + Number(v).toLocaleString('en-US');
+
+  let bdHTML = '';
+
+  if (!isCustom) {
+    bdHTML += bdRow('Base configuration', fmt(base));
+    if (glass) bdHTML += bdRow(`Glass — ${config.glass?.name}`, `+${fmt(glass)}`);
+    if (ped)   bdHTML += bdRow(`Pedestal`, `+${fmt(ped)}`);
+    if (quote.discount_pct) bdHTML += bdRow(`Discount (${quote.discount_pct}%)`, `−${fmt(Math.round((base+glass+ped)*quote.discount_pct/100))}`);
+    bdHTML += `<div class="bd-row bd-divider"></div>`;
+  }
+
+  bdHTML += bdRow('Unit price', fmt(unit));
+  bdHTML += bdRow('Quantity', `× ${qty}`);
+  bdHTML += `<div class="bd-row bd-divider"></div>`;
+  bdHTML += `<div class="bd-row bd-total"><span class="bd-lbl">Total</span><span class="bd-val">${fmt(total)}</span></div>`;
+  bdHTML += bdRow('Installation', '<span style="color:var(--muted)">Quoted separately</span>');
+
+  document.getElementById('breakdown').innerHTML = bdHTML;
+
+  // ── Spec rows ─────────────────────────────────────────────
+  const specDef = [
+    ['Brand',        config.brand?.name],
+    ['Style',        config.style?.name],
+    ['Size',         config.size?.label],
+    ['Panel Height', config.height_2
+      ? `${config.height?.label} / ${config.height_2?.label} Mixed`
+      : config.height?.label],
+    ['Panel Fabric', config.fabric?.name],
+    ['Trim',         config.trim?.name],
+    ['Glass',        config.glass?.name],
+    ['Pedestal',     config.pedestal?.name],
+    ['Quantity',     `${qty} unit${qty > 1 ? 's' : ''}`],
+  ].filter(([, v]) => v);
+
+  document.getElementById('spec-rows').innerHTML = specDef
+    .map(([k, v]) => `
+      <div class="spec-row">
+        <span class="sr-key">${k}</span>
+        <span class="sr-val">${v}</span>
+      </div>`).join('');
+
+  // ── SVG visual ────────────────────────────────────────────
+  const panelColor = config.fabric?.hex_color || '#C8C3BB';
+  const trimColor  = config.trim?.hex_color   || '#E2DDD6';
+
+  document.getElementById('svg-panel-back').setAttribute('fill', panelColor);
+  document.getElementById('svg-panel-left').setAttribute('fill', dimHex(panelColor, 12));
+  document.getElementById('svg-trim-back').setAttribute('stroke', trimColor);
+  document.getElementById('svg-trim-left').setAttribute('stroke', dimHex(trimColor, 8));
+
+  if (config.glass && config.glass.slug !== 'none') {
+    const g = document.getElementById('svg-glass');
+    g.style.display = '';
+    g.setAttribute('fill', config.glass.slug === 'frosted-glass'
+      ? 'rgba(200,220,235,0.28)' : 'rgba(175,215,245,0.18)');
+  }
+  if (config.pedestal && config.pedestal.slug !== 'none') {
+    const isGrey = config.pedestal.slug.includes('grey');
+    const pc = isGrey ? '#A8A39A' : '#C0BBB3';
+    document.getElementById('svg-pedestal').style.display = '';
+    document.getElementById('svg-pedestal-top').style.display = '';
+    document.getElementById('svg-pedestal').setAttribute('fill', pc);
+    document.getElementById('svg-pedestal-top').setAttribute('fill', lightHex(pc, 14));
+  }
+
+  // Try real layers
+  if (config.brand?.slug && config.style?.slug) {
+    const b = config.brand.slug, s = config.style.slug;
+    ['bg','worksurface'].forEach(t => tryLayer(t, b, s, 'default'));
+    if (config.fabric)   tryLayer('panel',    b, s, config.fabric.slug);
+    if (config.trim)     tryLayer('trim',     b, s, config.trim.slug);
+    if (config.glass)    tryLayer('glass',    b, s, config.glass.slug);
+    if (config.pedestal) tryLayer('pedestal', b, s, config.pedestal.slug);
+  }
+
+  // Page title
+  document.title = `Eltru Quote — ${config.config_code}`;
+}
+
+// ── CTA HANDLERS ──────────────────────────────────────────────
+async function acceptQuote() {
+  const btn = document.getElementById('btn-accept');
+  btn.disabled    = true;
+  btn.textContent = 'Processing\u2026';
+
+  try {
+    const res  = await fetch(`/api/quotes/${token}/accept`, { method: 'POST' });
+    const data = await res.json();
+
+    if (data.success) {
+      document.getElementById('cta-section').innerHTML = `
+        <div class="accepted-msg">
+          <div class="check-icon">&#10003;</div>
+          Quote accepted! We'll be in touch shortly.
+        </div>
+        <button class="btn btn-secondary" onclick="downloadPDF()">Download PDF</button>`;
+    } else {
+      throw new Error(data.error || 'Accept failed');
+    }
+  } catch (err) {
+    btn.disabled    = false;
+    btn.textContent = 'Accept This Quote';
+    alert('Error: ' + err.message);
+  }
+}
+
+async function downloadPDF() {
+  const btn = document.getElementById('btn-pdf');
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating PDF\u2026'; }
+
+  try {
+    const res = await fetch('/api/pdf', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ config_code: configCode, quote_token: token }),
+    });
+
+    if (res.ok) {
+      const blob  = await res.blob();
+      const url   = URL.createObjectURL(blob);
+      const a     = document.createElement('a');
+      a.href      = url;
+      a.download  = `eltru-quote-${configCode}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else {
+      const d = await res.json();
+      alert('PDF generation failed: ' + (d.error || res.status));
+    }
+  } catch (err) {
+    alert('PDF error: ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Download PDF'; }
+  }
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function showError(icon, title, msg) {
+  document.getElementById('loading-view').style.display = 'none';
+  document.getElementById('error-view').style.display   = '';
+  document.getElementById('error-icon').textContent     = icon;
+  document.getElementById('error-title').textContent    = title;
+  document.getElementById('error-msg').textContent      = msg;
+}
+
+function bdRow(label, val) {
+  return `<div class="bd-row"><span class="bd-lbl">${label}</span><span class="bd-val">${val}</span></div>`;
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function tryLayer(type, b, s, opt) {
+  try {
+    const r = await fetch(`/api/layers?brand=${b}&style=${s}&type=${type}&option=${opt}`);
+    const { url } = await r.json();
+    if (url) { const el = document.getElementById(`layer-${type}`); el.src = url; el.style.display = ''; }
+  } catch (_) {}
+}
+
+function dimHex(hex, n) {
+  const v = parseInt(hex.replace('#',''), 16);
+  const r = Math.max(0,((v>>16)&0xff)-n), g = Math.max(0,((v>>8)&0xff)-n), b = Math.max(0,(v&0xff)-n);
+  return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
+}
+
+function lightHex(hex, n) {
+  const v = parseInt(hex.replace('#',''), 16);
+  const r = Math.min(255,((v>>16)&0xff)+n), g = Math.min(255,((v>>8)&0xff)+n), b = Math.min(255,(v&0xff)+n);
+  return '#'+((r<<16)|(g<<8)|b).toString(16).padStart(6,'0');
+}
+
+init();
+</script>
+</body>
+</html>

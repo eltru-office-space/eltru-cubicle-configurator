@@ -1,0 +1,19 @@
+{
+  "name": "eltru-configurator",
+  "version": "1.0.0",
+  "description": "Cubicle configurator and quoting system for Eltru",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.x",
+    "cors": "^2.x",
+    "dotenv": "^16.x",
+    "express": "^4.x",
+    "multer": "^2.1.1",
+    "nanoid": "^3.x",
+    "puppeteer": "^24.40.0",
+    "qrcode": "^1.x"
+  }
+}

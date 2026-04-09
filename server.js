@@ -1,0 +1,209 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+
+const { supabaseAdmin } = require('./lib/supabase');
+const configsRouter = require('./routes/configs');
+const quotesRouter  = require('./routes/quotes');
+const pdfRouter     = require('./routes/pdf');
+const adminRouter   = require('./routes/admin');
+
+const app  = express();
+const PORT = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ── Health ──────────────────────────────────────────────────
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ── GET /api/options — all product options in one call ──────
+app.get('/api/options', async (req, res) => {
+  try {
+    const [brandsR, stylesR, sizesR, heightsR, fabricsR, trimsR, glassR, pedestalsR, pricingR] =
+      await Promise.all([
+        supabaseAdmin.from('brands').select('*').order('sort_order'),
+        supabaseAdmin.from('styles').select('*').order('sort_order'),
+        supabaseAdmin.from('sizes').select('*').order('sort_order'),
+        supabaseAdmin.from('heights').select('*').order('sort_order'),
+        supabaseAdmin.from('fabrics').select('*').order('sort_order'),
+        supabaseAdmin.from('trims').select('*').order('sort_order'),
+        supabaseAdmin.from('glass_options').select('*').order('sort_order'),
+        supabaseAdmin.from('pedestals').select('*').order('sort_order'),
+        supabaseAdmin.from('pricing').select('*'),
+      ]);
+
+    for (const { error, label } of [
+      { error: brandsR.error,    label: 'brands' },
+      { error: stylesR.error,    label: 'styles' },
+      { error: sizesR.error,     label: 'sizes' },
+      { error: heightsR.error,   label: 'heights' },
+      { error: fabricsR.error,   label: 'fabrics' },
+      { error: trimsR.error,     label: 'trims' },
+      { error: glassR.error,     label: 'glass_options' },
+      { error: pedestalsR.error, label: 'pedestals' },
+      { error: pricingR.error,   label: 'pricing' },
+    ]) {
+      if (error) throw new Error(`${label}: ${error.message}`);
+    }
+
+    // Nest styles → sizes inside brands
+    const brands = (brandsR.data || []).map(brand => ({
+      ...brand,
+      styles: (stylesR.data || [])
+        .filter(s => s.brand_id === brand.id)
+        .map(style => ({
+          ...style,
+          sizes: (sizesR.data || []).filter(sz => sz.style_id === style.id),
+        })),
+    }));
+
+    // Heights keyed by brand slug
+    const heights = {};
+    for (const brand of (brandsR.data || [])) {
+      heights[brand.slug] = (heightsR.data || []).filter(h => h.brand_id === brand.id);
+    }
+
+    res.json({
+      brands,
+      heights,
+      fabrics:      fabricsR.data  || [],
+      trims:        trimsR.data    || [],
+      glass_options: glassR.data   || [],
+      pedestals:    pedestalsR.data || [],
+      pricing:      pricingR.data  || [],
+    });
+  } catch (err) {
+    console.error('GET /api/options error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── GET /api/layers — single lookup OR bulk grouped fetch ───
+app.get('/api/layers', async (req, res) => {
+  try {
+    const { brand: brandSlug, style: styleSlug, type: layerType, option: optionSlug } = req.query;
+
+    // Resolve brand
+    const { data: brandRow } = await supabaseAdmin
+      .from('brands').select('id').eq('slug', brandSlug).single();
+    if (!brandRow) return res.json(layerType ? { url: null } : {});
+
+    // Resolve style
+    const { data: styleRow } = await supabaseAdmin
+      .from('styles').select('id').eq('slug', styleSlug).eq('brand_id', brandRow.id).single();
+    if (!styleRow) return res.json(layerType ? { url: null } : {});
+
+    // ── BULK mode: no type → return all layers grouped ────────────
+    if (!layerType) {
+      const { data: allLayers } = await supabaseAdmin
+        .from('layer_assets')
+        .select('layer_type, fabric_id, trim_id, glass_id, pedestal_id, storage_url')
+        .eq('brand_id', brandRow.id)
+        .eq('style_id', styleRow.id);
+
+      // Load option slugs in parallel for lookup
+      const [fabrics, trims, glasses, pedestals] = await Promise.all([
+        supabaseAdmin.from('fabrics').select('id,slug'),
+        supabaseAdmin.from('trims').select('id,slug'),
+        supabaseAdmin.from('glass_options').select('id,slug'),
+        supabaseAdmin.from('pedestals').select('id,slug'),
+      ]);
+      const slugOf = (rows, id) => (rows.data || []).find(r => r.id === id)?.slug || null;
+
+      const grouped = {};
+      for (const layer of (allLayers || [])) {
+        const { layer_type, fabric_id, trim_id, glass_id, pedestal_id, storage_url } = layer;
+        if (!grouped[layer_type]) grouped[layer_type] = {};
+        if (fabric_id)   { grouped[layer_type][slugOf(fabrics,   fabric_id)   || fabric_id]   = storage_url; }
+        else if (trim_id)     { grouped[layer_type][slugOf(trims,    trim_id)     || trim_id]     = storage_url; }
+        else if (glass_id)    { grouped[layer_type][slugOf(glasses,  glass_id)    || glass_id]    = storage_url; }
+        else if (pedestal_id) { grouped[layer_type][slugOf(pedestals,pedestal_id) || pedestal_id] = storage_url; }
+        else                  { grouped[layer_type] = storage_url; } // bg / worksurface — direct URL
+      }
+      return res.json(grouped);
+    }
+
+    // ── SINGLE mode: type provided → original behaviour ───────────
+    let query = supabaseAdmin
+      .from('layer_assets')
+      .select('storage_url')
+      .eq('brand_id', brandRow.id)
+      .eq('style_id', styleRow.id)
+      .eq('layer_type', layerType);
+
+    if (optionSlug && optionSlug !== 'default') {
+      const optionTableMap = {
+        panel:    { table: 'fabrics',       col: 'fabric_id'    },
+        trim:     { table: 'trims',         col: 'trim_id'      },
+        glass:    { table: 'glass_options', col: 'glass_id'     },
+        pedestal: { table: 'pedestals',     col: 'pedestal_id'  },
+      };
+      const mapping = optionTableMap[layerType];
+      if (mapping) {
+        const { data: optRow } = await supabaseAdmin
+          .from(mapping.table).select('id').eq('slug', optionSlug).single();
+        if (optRow) query = query.eq(mapping.col, optRow.id);
+      }
+    }
+
+    const { data: layerRow } = await query.maybeSingle();
+    res.json({ url: layerRow?.storage_url || null });
+  } catch (err) {
+    res.json(req.query.type ? { url: null } : {});
+  }
+});
+
+// ── POST /api/auth/sales — verify sales password ────────────
+app.post('/api/auth/sales', (req, res) => {
+  if (!req.body.password) return res.status(400).json({ ok: false });
+  if (req.body.password === process.env.SALES_PASSWORD) {
+    res.json({ ok: true });
+  } else {
+    res.status(401).json({ ok: false });
+  }
+});
+
+// ── POST /api/auth/admin — verify admin password ─────────────
+app.post('/api/auth/admin', (req, res) => {
+  if (!req.body.password) return res.status(400).json({ ok: false });
+  if (req.body.password === process.env.ADMIN_PASSWORD) {
+    res.json({ ok: true });
+  } else {
+    res.status(401).json({ ok: false });
+  }
+});
+
+// ── GET /api/sales/recent — recent configs (sales-gated) ────
+app.get('/api/sales/recent', async (req, res) => {
+  const auth = req.headers['authorization'];
+  if (!auth || auth !== process.env.SALES_PASSWORD) {
+    return res.status(401).json({ success: false, error: 'Unauthorized' });
+  }
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('configurations')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (error) throw error;
+    res.json({ success: true, configs: data });
+  } catch (err) {
+    console.error('GET /api/sales/recent error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── Mounted routers ─────────────────────────────────────────
+app.use('/api/configs', configsRouter);
+app.use('/api/quotes',  quotesRouter);
+app.use('/api/pdf',     pdfRouter);
+app.use('/api/admin',   adminRouter);
+
+app.listen(PORT, () => {
+  console.log(`Eltru Configurator running on http://localhost:${PORT}`);
+});
