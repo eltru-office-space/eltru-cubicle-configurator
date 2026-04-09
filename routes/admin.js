@@ -246,4 +246,191 @@ router.put('/pricing/:id', async (req, res) => {
   }
 });
 
+// ── GET /api/admin/pricing-by-size ────────────────────────────────────────
+router.get('/pricing-by-size', async (req, res) => {
+  try {
+    const { brand_slug, style_slug } = req.query;
+    if (!brand_slug || !style_slug) {
+      return res.status(400).json({ success: false, error: 'brand_slug and style_slug required' });
+    }
+
+    const { data: brand, error: bErr } = await supabaseAdmin.from('brands').select('id').eq('slug', brand_slug).single();
+    if (bErr || !brand) return res.status(404).json({ success: false, error: 'Brand not found' });
+
+    const { data: style, error: sErr } = await supabaseAdmin.from('styles').select('id').eq('slug', style_slug).eq('brand_id', brand.id).single();
+    if (sErr || !style) return res.status(404).json({ success: false, error: 'Style not found' });
+
+    const [
+      { data: allPricing },
+      { data: sizes },
+      { data: heights },
+      { data: fabrics },
+      { data: trims },
+      { data: glassOptions },
+      { data: pedestals },
+    ] = await Promise.all([
+      supabaseAdmin.from('pricing').select('*'),
+      supabaseAdmin.from('sizes').select('*').eq('style_id', style.id).order('sort_order'),
+      supabaseAdmin.from('heights').select('*').eq('brand_id', brand.id).order('height_in'),
+      supabaseAdmin.from('fabrics').select('*').order('sort_order'),
+      supabaseAdmin.from('trims').select('*').order('sort_order'),
+      supabaseAdmin.from('glass_options').select('*').order('sort_order'),
+      supabaseAdmin.from('pedestals').select('*').order('sort_order'),
+    ]);
+
+    const pricing = { base: {}, height_addons: {}, fabric_addons: {}, trim_addons: {}, glass_addons: {}, pedestal_addons: {} };
+
+    for (const row of (allPricing || [])) {
+      const inBS = row.brand_id === brand.id && row.style_id === style.id;
+      if (inBS && row.size_id && !row.height_id && !row.fabric_id && !row.trim_id && !row.glass_id && !row.pedestal_id) {
+        pricing.base[row.size_id] = { id: row.id, price: row.price_usd };
+      } else if (inBS && row.size_id && row.height_id) {
+        if (!pricing.height_addons[row.size_id]) pricing.height_addons[row.size_id] = {};
+        pricing.height_addons[row.size_id][row.height_id] = { id: row.id, price: row.price_usd };
+      } else if (inBS && row.fabric_id && !row.size_id) {
+        pricing.fabric_addons[row.fabric_id] = { id: row.id, price: row.price_usd };
+      } else if (inBS && row.trim_id && !row.size_id) {
+        pricing.trim_addons[row.trim_id] = { id: row.id, price: row.price_usd };
+      } else if (inBS && row.size_id && row.glass_id) {
+        if (!pricing.glass_addons[row.size_id]) pricing.glass_addons[row.size_id] = {};
+        pricing.glass_addons[row.size_id][row.glass_id] = { id: row.id, price: row.price_usd };
+      } else if (row.pedestal_id && !row.brand_id) {
+        pricing.pedestal_addons[row.pedestal_id] = { id: row.id, price: row.price_usd };
+      }
+    }
+
+    res.json({
+      success: true,
+      pricing,
+      sizes:        sizes        || [],
+      heights:      heights      || [],
+      fabrics:      fabrics      || [],
+      trims:        trims        || [],
+      glass_options: glassOptions || [],
+      pedestals:    pedestals    || [],
+    });
+  } catch (err) {
+    console.error('GET /api/admin/pricing-by-size error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── PUT /api/admin/pricing — upsert by FK combination ─────────────────────
+router.put('/pricing', async (req, res) => {
+  try {
+    const { type, option_id, size_id, brand_slug, style_slug, price_usd } = req.body;
+    if (price_usd === undefined || isNaN(Number(price_usd))) {
+      return res.status(400).json({ success: false, error: 'price_usd must be a number' });
+    }
+    if (!type) return res.status(400).json({ success: false, error: 'type is required' });
+
+    let brand_id = null, style_id = null;
+    if (brand_slug) {
+      const { data: b } = await supabaseAdmin.from('brands').select('id').eq('slug', brand_slug).single();
+      brand_id = b?.id || null;
+    }
+    if (style_slug && brand_id) {
+      const { data: s } = await supabaseAdmin.from('styles').select('id').eq('slug', style_slug).eq('brand_id', brand_id).single();
+      style_id = s?.id || null;
+    }
+
+    let q = supabaseAdmin.from('pricing').select('id');
+    let newRow = { price_usd: Number(price_usd) };
+
+    switch (type) {
+      case 'base':
+        q = q.eq('brand_id', brand_id).eq('style_id', style_id).eq('size_id', size_id)
+             .is('height_id', null).is('fabric_id', null).is('trim_id', null).is('glass_id', null).is('pedestal_id', null);
+        newRow = { ...newRow, brand_id, style_id, size_id,
+          label: `base:${brand_slug}:${style_slug}:${size_id}` };
+        break;
+      case 'height':
+        q = q.eq('brand_id', brand_id).eq('style_id', style_id).eq('size_id', size_id).eq('height_id', option_id);
+        newRow = { ...newRow, brand_id, style_id, size_id, height_id: option_id,
+          label: `height:${brand_slug}:${style_slug}:${size_id}:${option_id}` };
+        break;
+      case 'fabric':
+        q = q.eq('brand_id', brand_id).eq('style_id', style_id).eq('fabric_id', option_id).is('size_id', null);
+        newRow = { ...newRow, brand_id, style_id, fabric_id: option_id,
+          label: `fabric:${brand_slug}:${style_slug}:${option_id}` };
+        break;
+      case 'trim':
+        q = q.eq('brand_id', brand_id).eq('style_id', style_id).eq('trim_id', option_id).is('size_id', null);
+        newRow = { ...newRow, brand_id, style_id, trim_id: option_id,
+          label: `trim:${brand_slug}:${style_slug}:${option_id}` };
+        break;
+      case 'glass':
+        q = q.eq('brand_id', brand_id).eq('style_id', style_id).eq('size_id', size_id).eq('glass_id', option_id);
+        newRow = { ...newRow, brand_id, style_id, size_id, glass_id: option_id,
+          label: `glass:${brand_slug}:${style_slug}:${size_id}:${option_id}` };
+        break;
+      case 'pedestal':
+        q = q.eq('pedestal_id', option_id).is('brand_id', null);
+        newRow = { ...newRow, pedestal_id: option_id, label: `pedestal:${option_id}` };
+        break;
+      default:
+        return res.status(400).json({ success: false, error: `Unknown type: ${type}` });
+    }
+
+    const { data: existing } = await q.maybeSingle();
+    let result;
+    if (existing) {
+      const { data, error } = await supabaseAdmin.from('pricing')
+        .update({ price_usd: Number(price_usd) }).eq('id', existing.id).select().single();
+      if (error) throw error;
+      result = data;
+    } else {
+      const { data, error } = await supabaseAdmin.from('pricing').insert(newRow).select().single();
+      if (error) throw error;
+      result = data;
+    }
+    res.json({ success: true, pricing: result });
+  } catch (err) {
+    console.error('PUT /api/admin/pricing error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ── GET /api/admin/layers-by-brand-style ──────────────────────────────────
+router.get('/layers-by-brand-style', async (req, res) => {
+  try {
+    const { brand_slug, style_slug } = req.query;
+    if (!brand_slug || !style_slug) {
+      return res.status(400).json({ success: false, error: 'brand_slug and style_slug required' });
+    }
+
+    const { data: brand, error: bErr } = await supabaseAdmin.from('brands').select('id').eq('slug', brand_slug).single();
+    if (bErr || !brand) return res.status(404).json({ success: false, error: 'Brand not found' });
+    const { data: style, error: sErr } = await supabaseAdmin.from('styles').select('id').eq('slug', style_slug).eq('brand_id', brand.id).single();
+    if (sErr || !style) return res.status(404).json({ success: false, error: 'Style not found' });
+
+    const { data: layers } = await supabaseAdmin
+      .from('layer_assets').select('*').eq('brand_id', brand.id).eq('style_id', style.id);
+
+    const [{ data: fabrics }, { data: trims }, { data: glasses }, { data: pedestals }] = await Promise.all([
+      supabaseAdmin.from('fabrics').select('id,slug'),
+      supabaseAdmin.from('trims').select('id,slug'),
+      supabaseAdmin.from('glass_options').select('id,slug'),
+      supabaseAdmin.from('pedestals').select('id,slug'),
+    ]);
+    const sOf = (rows, id) => (rows || []).find(r => r.id === id)?.slug || String(id);
+
+    const result = {};
+    for (const layer of (layers || [])) {
+      const { layer_type, fabric_id, trim_id, glass_id, pedestal_id, storage_url, id } = layer;
+      const info = { url: storage_url, id };
+      if      (fabric_id)   { if (!result.panel)    result.panel    = {}; result.panel[sOf(fabrics, fabric_id)]         = info; }
+      else if (trim_id)     { if (!result.trim)     result.trim     = {}; result.trim[sOf(trims, trim_id)]              = info; }
+      else if (glass_id)    { if (!result.glass)    result.glass    = {}; result.glass[sOf(glasses, glass_id)]          = info; }
+      else if (pedestal_id) { if (!result.pedestal) result.pedestal = {}; result.pedestal[sOf(pedestals, pedestal_id)]  = info; }
+      else                  { result[layer_type] = info; }
+    }
+
+    res.json({ success: true, layers: result });
+  } catch (err) {
+    console.error('GET /api/admin/layers-by-brand-style error:', err.message);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 module.exports = router;

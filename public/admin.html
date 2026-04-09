@@ -7,1106 +7,942 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Geist:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --bg:     #F4F1EC;
-    --surf:   #FDFCFA;
-    --acc:    #1C3B2A;
-    --acc2:   #2A5A3F;
-    --gold:   #B8965A;
-    --gold2:  #D4AF7A;
-    --text:   #1A1A1A;
-    --muted:  #6B6B6B;
-    --border: #E0D8CE;
-    --err:    #C0392B;
-    --ok:     #1C6B3A;
-    --warn:   #9B5E0A;
-    --r:      10px;
-    --sh:     0 2px 12px rgba(0,0,0,0.08);
-    --shl:    0 8px 32px rgba(0,0,0,0.12);
-  }
+:root {
+  --bg:           #F4F1EC;
+  --white:        #FFFFFF;
+  --border:       #E0DCD4;
+  --text:         #1C1A17;
+  --muted:        #9A9488;
+  --accent:       #1C3B2A;
+  --accent-light: #E8F0EB;
+  --accent2:      #2A5A3F;
+  --err:          #C0392B;
+  --warn:         #D97706;
+  --r:            12px;
+  --shadow:       0 2px 12px rgba(0,0,0,0.07);
+  --shadow-lg:    0 8px 32px rgba(0,0,0,0.12);
+}
 
-  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+body { font-family: 'Geist', 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
 
-  /* ── Gate ── */
-  #gate { min-height:100vh; display:flex; align-items:center; justify-content:center; }
-  .gate-card { background:var(--surf); border:1px solid var(--border); border-radius:16px; padding:48px 56px; width:400px; box-shadow:var(--shl); text-align:center; }
-  .gate-logo { font-family:'Cormorant Garamond',serif; font-size:2.2rem; font-weight:700; color:var(--acc); letter-spacing:.04em; margin-bottom:4px; }
-  .gate-logo span { color:var(--gold); }
-  .gate-sub { font-size:.75rem; color:var(--muted); letter-spacing:.12em; text-transform:uppercase; margin-bottom:36px; }
-  .gate-heading { font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:600; color:var(--acc); margin-bottom:24px; }
-  .gate-input { width:100%; padding:12px 16px; border:1.5px solid var(--border); border-radius:var(--r); font-family:'Inter',sans-serif; font-size:.9rem; background:var(--bg); color:var(--text); outline:none; transition:border-color .2s; margin-bottom:16px; text-align:center; letter-spacing:.08em; }
-  .gate-input:focus { border-color:var(--acc); }
-  .gate-input.shake { animation:shake .4s ease; border-color:var(--err); }
-  @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
-  .gate-err { font-size:.8rem; color:var(--err); margin-bottom:12px; min-height:18px; }
-  .btn-primary { width:100%; padding:13px; background:var(--acc); color:#fff; border:none; border-radius:var(--r); font-family:'Inter',sans-serif; font-size:.85rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; cursor:pointer; transition:background .2s,transform .1s; }
-  .btn-primary:hover { background:var(--acc2); }
-  .btn-primary:active { transform:scale(.98); }
-  .btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+/* ── Gate ─────────────────────────────────────────────── */
+#gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+.gate-card { background: var(--white); border: 1px solid var(--border); border-radius: 16px; padding: 48px 52px; width: 380px; box-shadow: var(--shadow-lg); text-align: center; }
+.gate-logo { font-family: 'Cormorant Garamond', serif; font-size: 2rem; font-weight: 700; color: var(--accent); letter-spacing: .04em; margin-bottom: 4px; }
+.gate-sub { font-size: .7rem; color: var(--muted); letter-spacing: .12em; text-transform: uppercase; margin-bottom: 32px; }
+.gate-label { font-size: .7rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); text-align: left; margin-bottom: 6px; display: block; }
+.gate-input { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: .9rem; background: var(--bg); color: var(--text); outline: none; transition: border-color .2s; margin-bottom: 16px; text-align: center; letter-spacing: .1em; }
+.gate-input:focus { border-color: var(--accent); }
+.gate-input.shake { animation: shake .4s ease; border-color: var(--err); }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)} }
+.gate-err { font-size: .78rem; color: var(--err); min-height: 18px; margin-bottom: 8px; }
+.gate-btn { width: 100%; padding: 13px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-family: inherit; font-size: .82rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; cursor: pointer; transition: background .2s; }
+.gate-btn:hover { background: var(--accent2); }
+.gate-btn:disabled { opacity: .5; cursor: not-allowed; }
 
-  /* ── App ── */
-  #app { display:none; min-height:100vh; }
-  .app-header { background:var(--acc); color:#fff; padding:0 32px; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
-  .app-logo { font-family:'Cormorant Garamond',serif; font-size:1.4rem; font-weight:700; letter-spacing:.04em; }
-  .app-logo span { color:var(--gold2); }
-  .app-title { font-size:.8rem; font-weight:500; letter-spacing:.1em; text-transform:uppercase; opacity:.8; }
-  .btn-logout { font-size:.75rem; color:rgba(255,255,255,.6); cursor:pointer; background:none; border:1px solid rgba(255,255,255,.2); border-radius:6px; padding:6px 14px; font-family:'Inter',sans-serif; transition:all .2s; }
-  .btn-logout:hover { color:#fff; border-color:rgba(255,255,255,.5); }
+/* ── App layout ───────────────────────────────────────── */
+#app { display: none; min-height: 100vh; flex-direction: column; }
 
-  /* ── Tabs ── */
-  .tabs-bar { background:var(--surf); border-bottom:1px solid var(--border); padding:0 32px; display:flex; gap:0; }
-  .tab-btn { padding:16px 24px; background:none; border:none; border-bottom:2.5px solid transparent; font-family:'Inter',sans-serif; font-size:.82rem; font-weight:500; color:var(--muted); cursor:pointer; letter-spacing:.04em; transition:all .15s; }
-  .tab-btn:hover { color:var(--text); }
-  .tab-btn.active { color:var(--acc); border-bottom-color:var(--acc); }
+/* ── Header ───────────────────────────────────────────── */
+.app-header { background: var(--accent); color: #fff; padding: 0 32px; height: 58px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.header-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.35rem; font-weight: 700; letter-spacing: .04em; }
+.header-logo span { opacity: .65; font-weight: 400; }
+.header-nav { display: flex; gap: 4px; background: rgba(255,255,255,.1); border-radius: 8px; padding: 4px; }
+.nav-btn { padding: 7px 18px; border: none; border-radius: 6px; font-family: inherit; font-size: .78rem; font-weight: 500; letter-spacing: .04em; cursor: pointer; background: transparent; color: rgba(255,255,255,.7); transition: all .15s; }
+.nav-btn:hover { color: #fff; background: rgba(255,255,255,.1); }
+.nav-btn.active { background: #fff; color: var(--accent); font-weight: 600; }
+.btn-logout { font-size: .73rem; color: rgba(255,255,255,.6); cursor: pointer; background: none; border: 1px solid rgba(255,255,255,.25); border-radius: 6px; padding: 6px 14px; font-family: inherit; transition: all .2s; }
+.btn-logout:hover { color: #fff; border-color: rgba(255,255,255,.5); }
 
-  /* ── Tab panels ── */
-  .tab-panel { display:none; padding:32px; max-width:1200px; margin:0 auto; }
-  .tab-panel.active { display:block; }
+/* ── Switcher bar ─────────────────────────────────────── */
+.switchers-bar { background: var(--white); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; gap: 24px; }
+.brand-switcher { display: flex; gap: 8px; }
+.brand-btn { padding: 10px 24px; border: 1.5px solid var(--border); border-radius: 8px; background: transparent; font-family: inherit; font-size: .82rem; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .15s; letter-spacing: .02em; }
+.brand-btn:hover { border-color: var(--accent); color: var(--accent); }
+.brand-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.switcher-divider { width: 1px; height: 28px; background: var(--border); }
+.style-switcher { display: flex; gap: 6px; }
+.style-btn { padding: 7px 18px; border: 1.5px solid var(--border); border-radius: 20px; background: transparent; font-family: inherit; font-size: .78rem; font-weight: 500; color: var(--muted); cursor: pointer; transition: all .15s; }
+.style-btn:hover { border-color: var(--accent); color: var(--accent); }
+.style-btn.active { background: var(--accent-light); border-color: var(--accent); color: var(--accent); font-weight: 600; }
 
-  /* ── Stats row ── */
-  .stats-row { display:flex; gap:16px; margin-bottom:28px; flex-wrap:wrap; }
-  .stat-chip { background:var(--surf); border:1px solid var(--border); border-radius:var(--r); padding:14px 20px; min-width:160px; }
-  .stat-num { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:700; color:var(--acc); line-height:1; }
-  .stat-label { font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-top:4px; }
+/* ── Content area ─────────────────────────────────────── */
+.content-area { max-width: 900px; margin: 0 auto; padding: 32px 32px 64px; }
 
-  /* ── Upload form ── */
-  .card { background:var(--surf); border:1px solid var(--border); border-radius:var(--r); padding:24px 28px; margin-bottom:28px; box-shadow:var(--sh); }
-  .card-title { font-family:'Cormorant Garamond',serif; font-size:1.15rem; font-weight:600; color:var(--acc); margin-bottom:20px; }
-  .form-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; margin-bottom:16px; }
-  .fg { display:flex; flex-direction:column; gap:5px; }
-  .fl { font-size:.7rem; font-weight:600; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
-  .fi, select.fi { padding:9px 12px; border:1.5px solid var(--border); border-radius:8px; font-family:'Inter',sans-serif; font-size:.85rem; background:var(--bg); color:var(--text); outline:none; transition:border-color .2s; appearance:none; }
-  .fi:focus { border-color:var(--acc); }
-  .file-drop { border:2px dashed var(--border); border-radius:var(--r); padding:28px; text-align:center; cursor:pointer; transition:all .2s; background:var(--bg); }
-  .file-drop:hover, .file-drop.drag-over { border-color:var(--acc); background:rgba(28,59,42,.04); }
-  .file-drop-label { font-size:.85rem; color:var(--muted); margin-bottom:8px; }
-  .file-drop-hint  { font-size:.75rem; color:var(--border); }
-  .file-name-display { font-size:.82rem; color:var(--acc); margin-top:8px; font-weight:500; }
-  .btn-upload { margin-top:16px; padding:11px 28px; background:var(--acc); color:#fff; border:none; border-radius:var(--r); font-family:'Inter',sans-serif; font-size:.82rem; font-weight:600; letter-spacing:.06em; text-transform:uppercase; cursor:pointer; transition:background .2s; }
-  .btn-upload:hover { background:var(--acc2); }
-  .btn-upload:disabled { opacity:.5; cursor:not-allowed; }
+/* ── Loading state ────────────────────────────────────── */
+.loading-state { text-align: center; padding: 64px 32px; color: var(--muted); font-size: .88rem; }
+.loading-state::before { content: ''; display: block; width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 16px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.error-state { background: #FEF2F2; border: 1px solid #FCA5A5; border-radius: var(--r); padding: 20px 24px; color: var(--err); font-size: .85rem; margin-bottom: 24px; }
 
-  /* ── Upload progress bar ── */
-  .upload-progress { margin-top:12px; height:4px; background:var(--border); border-radius:2px; overflow:hidden; display:none; }
-  .upload-progress-bar { height:100%; background:var(--acc); width:0%; transition:width .3s ease; }
+/* ── Size cards ───────────────────────────────────────── */
+.size-card { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 24px; box-shadow: var(--shadow); overflow: hidden; }
 
-  /* ── Layer grid ── */
-  .layer-group-title { font-family:'Cormorant Garamond',serif; font-size:1.05rem; font-weight:600; color:var(--acc); margin:24px 0 12px; border-bottom:1px solid var(--border); padding-bottom:8px; }
-  .layer-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; margin-bottom:8px; }
-  .layer-card { background:var(--surf); border:1px solid var(--border); border-radius:var(--r); overflow:hidden; }
-  .layer-thumb { width:100%; height:120px; object-fit:cover; background:#EAE6DF; display:block; }
-  .layer-thumb-placeholder { width:100%; height:120px; background:#EAE6DF; display:flex; align-items:center; justify-content:center; font-size:.75rem; color:var(--muted); }
-  .layer-info { padding:10px 12px; }
-  .layer-type-badge { display:inline-block; background:var(--acc); color:#fff; font-size:.65rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:2px 8px; border-radius:4px; margin-bottom:6px; }
-  .layer-meta { font-size:.78rem; color:var(--muted); line-height:1.5; }
-  .layer-actions { padding:8px 12px; border-top:1px solid var(--border); display:flex; gap:8px; }
-  .btn-del { padding:5px 12px; background:transparent; color:var(--err); border:1px solid var(--err); border-radius:6px; font-size:.72rem; font-weight:600; cursor:pointer; transition:all .15s; }
-  .btn-del:hover { background:var(--err); color:#fff; }
-  .btn-replace { padding:5px 12px; background:transparent; color:var(--acc); border:1px solid var(--acc); border-radius:6px; font-size:.72rem; font-weight:600; cursor:pointer; transition:all .15s; }
-  .btn-replace:hover { background:var(--acc); color:#fff; }
-  .layer-filter-btn { padding:5px 12px; background:var(--bg); color:var(--muted); border:1px solid var(--border); border-radius:20px; font-size:.75rem; font-weight:600; cursor:pointer; transition:all .15s; }
-  .layer-filter-btn.active { background:var(--acc); color:#fff; border-color:var(--acc); }
-  .layer-empty { color:var(--muted); font-size:.85rem; padding:16px 0; }
-  /* Coverage matrix */
-  .coverage-table { border-collapse:collapse; font-size:.8rem; min-width:400px; }
-  .coverage-table th, .coverage-table td { padding:7px 12px; border:1px solid var(--border); text-align:center; }
-  .coverage-table th { background:var(--bg); font-weight:600; color:var(--muted); white-space:nowrap; }
-  .coverage-table td:first-child { text-align:left; font-weight:500; color:var(--text); }
-  .cov-yes { color:#1C3B2A; font-weight:700; }
-  .cov-no  { color:#ccc; }
+/* Card header */
+.card-header { display: flex; align-items: center; gap: 20px; padding: 20px 24px; border-bottom: 1px solid var(--border); background: var(--bg); }
+.card-header-thumb { width: 80px; height: 60px; border-radius: 8px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+.card-header-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.card-header-info { flex: 1; }
+.card-size-label { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 700; color: var(--text); line-height: 1.1; }
+.card-brand-style { font-size: .72rem; color: var(--muted); margin-top: 2px; letter-spacing: .04em; }
+.card-base-price { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+.base-price-label { font-size: .68rem; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+.base-price-row { display: flex; align-items: baseline; gap: 2px; }
+.base-price-sign { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--accent); }
+.base-price-input { border: none; border-bottom: 2px solid transparent; outline: none; background: transparent; color: var(--accent); font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 700; width: 90px; text-align: right; transition: border-color .2s; padding: 0; line-height: 1; }
+.base-price-input:focus { border-bottom-color: var(--accent); }
+.base-price-input.dirty { border-bottom-color: var(--warn); }
+.base-price-input.saved { border-bottom-color: var(--accent); }
+.base-price-sub { font-size: .68rem; color: var(--muted); }
 
-  /* ── Pricing table ── */
-  table { width:100%; border-collapse:collapse; }
-  thead th { padding:10px 14px; text-align:left; font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); border-bottom:2px solid var(--border); background:var(--bg); white-space:nowrap; }
-  tbody tr { border-bottom:1px solid var(--border); transition:background .15s; }
-  tbody tr:hover { background:rgba(28,59,42,.03); }
-  tbody td { padding:12px 14px; font-size:.85rem; }
-  .price-cell { display:flex; align-items:center; gap:8px; }
-  .price-display { cursor:pointer; padding:4px 8px; border-radius:6px; border:1.5px solid transparent; font-size:.9rem; font-family:'Inter',sans-serif; transition:border-color .15s; }
-  .price-display:hover { border-color:var(--border); }
-  .price-edit { padding:5px 10px; border:1.5px solid var(--acc); border-radius:6px; font-family:'Inter',sans-serif; font-size:.9rem; width:100px; outline:none; }
-  .btn-save-price { padding:5px 12px; background:var(--acc); color:#fff; border:none; border-radius:6px; font-size:.72rem; font-weight:600; cursor:pointer; }
-  .btn-cancel-price { padding:5px 10px; background:none; color:var(--muted); border:1px solid var(--border); border-radius:6px; font-size:.72rem; cursor:pointer; }
-  .saved-check { color:var(--ok); font-size:.8rem; font-weight:600; }
+/* Card body */
+.card-body { padding: 0 24px; }
 
-  /* ── Config table ── */
-  .search-row { display:flex; gap:12px; margin-bottom:20px; align-items:center; }
-  .search-input { flex:1; max-width:320px; padding:9px 14px; border:1.5px solid var(--border); border-radius:var(--r); font-family:'Inter',sans-serif; font-size:.88rem; background:var(--bg); color:var(--text); outline:none; transition:border-color .2s; }
-  .search-input:focus { border-color:var(--acc); }
-  .code-badge { font-family:'Cormorant Garamond',serif; font-weight:700; font-size:1rem; color:var(--acc); letter-spacing:.04em; }
-  td.muted { color:var(--muted); font-size:.8rem; }
-  .btn-row { padding:5px 12px; border:none; border-radius:6px; font-family:'Inter',sans-serif; font-size:.72rem; font-weight:600; cursor:pointer; transition:background .15s; white-space:nowrap; }
-  .btn-row.view    { background:var(--acc); color:#fff; }
-  .btn-row.quote   { background:var(--gold); color:#fff; }
-  .btn-row.pdf     { background:#4A4A4A; color:#fff; }
-  .btn-row:hover   { opacity:.85; }
-  .row-actions     { display:flex; gap:6px; }
+/* Section dividers */
+.section-divider { font-size: .65rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); padding: 16px 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
 
-  /* ── Products tab ── */
-  .product-tree { margin-bottom:28px; }
-  .brand-header { background:var(--acc); color:#fff; border-radius:var(--r) var(--r) 0 0; padding:12px 18px; font-family:'Cormorant Garamond',serif; font-size:1.1rem; font-weight:600; }
-  .styles-wrap  { border:1px solid var(--border); border-top:none; border-radius:0 0 var(--r) var(--r); overflow:hidden; }
-  .style-row    { padding:12px 18px; border-bottom:1px solid var(--border); }
-  .style-row:last-child { border-bottom:none; }
-  .style-name   { font-weight:600; font-size:.9rem; margin-bottom:6px; color:var(--acc); }
-  .sizes-list   { display:flex; gap:8px; flex-wrap:wrap; }
-  .size-chip    { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:3px 10px; font-size:.78rem; color:var(--muted); }
-  .swatches-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
-  .swatch-item  { display:flex; align-items:center; gap:6px; }
-  .swatch-dot   { width:20px; height:20px; border-radius:50%; border:1px solid var(--border); flex-shrink:0; }
-  .swatch-name  { font-size:.8rem; }
-  .product-section-title { font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:600; color:var(--acc); margin:28px 0 16px; }
-  .option-chips { display:flex; gap:8px; flex-wrap:wrap; }
-  .option-chip  { background:var(--surf); border:1px solid var(--border); border-radius:8px; padding:6px 14px; font-size:.82rem; color:var(--text); }
-  .admin-note   { background:#FEF9F0; border:1px solid #E8D8A0; border-radius:var(--r); padding:14px 18px; font-size:.82rem; color:var(--warn); margin-top:28px; }
+/* Option rows */
+.option-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(224,220,212,.5); }
+.option-row:last-child { border-bottom: none; }
+.row-thumb { width: 48px; height: 36px; border-radius: 6px; flex-shrink: 0; overflow: hidden; position: relative; border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+.row-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.status-dot { position: absolute; top: 3px; right: 3px; width: 7px; height: 7px; border-radius: 50%; border: 1px solid rgba(255,255,255,.8); }
+.status-dot.green { background: #22C55E; }
+.status-dot.red   { background: #EF4444; }
+.row-info { flex: 1; min-width: 0; }
+.row-name { font-size: .82rem; font-weight: 500; color: var(--text); display: flex; align-items: center; gap: 6px; }
+.swatch { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,.1); flex-shrink: 0; }
+.row-desc { font-size: .72rem; color: var(--muted); margin-top: 1px; }
+.row-price { flex-shrink: 0; display: flex; align-items: center; min-width: 100px; justify-content: flex-end; }
+.price-field { display: flex; align-items: baseline; gap: 2px; }
+.price-prefix { font-size: .8rem; color: var(--muted); }
+.row-price-input { border: none; border-bottom: 2px solid transparent; outline: none; background: transparent; color: var(--accent); font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; font-weight: 600; width: 70px; text-align: right; transition: border-color .2s; padding: 0; }
+.row-price-input:focus { border-bottom-color: var(--accent); }
+.row-price-input.dirty { border-bottom-color: var(--warn); }
+.row-price-input.saved { border-bottom-color: var(--accent); }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: .7rem; font-weight: 500; letter-spacing: .04em; }
+.badge-included { background: #F3F4F6; color: var(--muted); }
+.badge-always { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+.row-actions { flex-shrink: 0; }
+.btn-upload { padding: 5px 12px; border-radius: 6px; font-family: inherit; font-size: .7rem; font-weight: 500; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.btn-upload.missing  { background: transparent; border: 1.5px solid var(--accent); color: var(--accent); }
+.btn-upload.missing:hover  { background: var(--accent-light); }
+.btn-upload.uploaded { background: transparent; border: 1.5px solid var(--border); color: var(--muted); }
+.btn-upload.uploaded:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* ── Utility ── */
-  .spinner { width:16px; height:16px; border:2.5px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; display:inline-block; vertical-align:middle; }
-  .inline-spinner { width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--acc); border-radius:50%; animation:spin .7s linear infinite; display:inline-block; vertical-align:middle; margin-right:6px; }
-  @keyframes spin { to { transform:rotate(360deg); } }
-  .msg-err { background:#FDF2F2; border:1px solid #E8C4C4; color:var(--err); border-radius:8px; padding:12px 16px; font-size:.85rem; margin-top:12px; }
-  .msg-ok  { background:#F0FAF4; border:1px solid #A8D8B8; color:var(--ok);  border-radius:8px; padding:12px 16px; font-size:.85rem; margin-top:12px; }
-  .empty-state { text-align:center; padding:48px 24px; color:var(--muted); font-size:.9rem; }
-  .table-wrap { overflow-x:auto; }
-  .count-badge { font-size:.8rem; color:var(--muted); margin-left:8px; }
+/* Card footer */
+.card-footer { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-top: 1px solid var(--border); background: var(--bg); }
+.footer-hint { font-size: .72rem; color: var(--muted); }
+.btn-save-all { padding: 9px 20px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-family: inherit; font-size: .78rem; font-weight: 600; letter-spacing: .04em; cursor: pointer; transition: background .2s; }
+.btn-save-all:hover { background: var(--accent2); }
+.btn-save-all:disabled { opacity: .5; cursor: not-allowed; }
 
-  /* ── Toast ── */
-  #toast { position:fixed; bottom:32px; left:50%; transform:translateX(-50%); background:var(--acc); color:#fff; padding:10px 22px; border-radius:100px; font-size:.82rem; font-weight:500; z-index:9999; opacity:0; pointer-events:none; transition:opacity .3s; box-shadow:0 4px 16px rgba(0,0,0,.15); }
+/* ── Pedestal section ─────────────────────────────────── */
+.pedestal-section { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); box-shadow: var(--shadow); overflow: hidden; }
+.pedestal-section-header { padding: 20px 24px; border-bottom: 1px solid var(--border); background: var(--bg); }
+.pedestal-section-title { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; font-weight: 700; color: var(--text); }
+.pedestal-section-sub { font-size: .75rem; color: var(--muted); margin-top: 3px; }
+.pedestal-body { padding: 0 24px; }
+.pedestal-footer { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-top: 1px solid var(--border); background: var(--bg); }
 
-  /* ── MOBILE ── */
-  @media (max-width: 768px) {
-    .tabs-bar { padding:0 8px; overflow-x:auto; -webkit-overflow-scrolling:touch; white-space:nowrap; flex-wrap:nowrap; }
-    .tab-btn  { padding:14px 16px; font-size:.78rem; flex-shrink:0; }
-    .tab-panel { padding:16px; }
-    /* Layer cards: max 2 columns on mobile */
-    .layer-grid { grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:10px; }
-    /* Coverage matrix: horizontal scroll */
-    #coverage-matrix-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-    .coverage-table { font-size:.72rem; }
-    /* Tables: horizontal scroll */
-    .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-    table { min-width:480px; }
-    /* Search row stack */
-    .search-row { flex-wrap:wrap; gap:6px; }
-    .search-input { min-width:120px; }
-    /* Card padding */
-    .card { padding:16px; }
-  }
+/* ── Orders section ───────────────────────────────────── */
+.orders-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; gap: 12px; flex-wrap: wrap; }
+.orders-filters { display: flex; gap: 10px; flex-wrap: wrap; flex: 1; }
+.orders-search { flex: 1; min-width: 200px; padding: 9px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: .82rem; background: var(--white); color: var(--text); outline: none; transition: border-color .2s; }
+.orders-search:focus { border-color: var(--accent); }
+.date-input { padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 8px; font-family: inherit; font-size: .8rem; background: var(--white); color: var(--text); outline: none; transition: border-color .2s; }
+.date-input:focus { border-color: var(--accent); }
+.btn-csv { padding: 9px 18px; background: transparent; border: 1.5px solid var(--border); color: var(--muted); border-radius: 8px; font-family: inherit; font-size: .78rem; font-weight: 500; cursor: pointer; transition: all .15s; white-space: nowrap; }
+.btn-csv:hover { border-color: var(--accent); color: var(--accent); }
+.table-wrap { background: var(--white); border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); }
+table { width: 100%; border-collapse: collapse; }
+thead th { background: var(--bg); padding: 11px 16px; text-align: left; font-size: .68rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--border); }
+tbody td { padding: 12px 16px; font-size: .82rem; border-bottom: 1px solid rgba(224,220,212,.5); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: rgba(244,241,236,.5); }
+.config-code { font-family: 'Geist', monospace; font-size: .8rem; font-weight: 600; color: var(--accent); letter-spacing: .06em; }
+.actions-cell { display: flex; gap: 6px; }
+.btn-action { padding: 4px 10px; border-radius: 5px; font-family: inherit; font-size: .7rem; font-weight: 500; cursor: pointer; transition: all .15s; text-decoration: none; display: inline-block; border: 1.5px solid; }
+.btn-view    { border-color: var(--border); color: var(--muted); background: transparent; }
+.btn-view:hover { border-color: var(--accent); color: var(--accent); }
+.btn-quote   { border-color: var(--accent); color: var(--accent); background: transparent; }
+.btn-quote:hover { background: var(--accent-light); }
+.btn-pdf     { border-color: var(--border); color: var(--muted); background: transparent; }
+.btn-pdf:hover { border-color: var(--muted); }
+
+/* ── Toasts ───────────────────────────────────────────── */
+#toasts { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
+.toast { padding: 12px 20px; border-radius: 8px; font-size: .82rem; font-weight: 500; box-shadow: var(--shadow-lg); animation: toast-in .25s ease; pointer-events: all; max-width: 320px; }
+.toast-success { background: var(--accent); color: #fff; }
+.toast-error   { background: var(--err); color: #fff; }
+.toast-warn    { background: var(--warn); color: #fff; }
+@keyframes toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── Placeholder images ───────────────────────────────── */
+.thumb-bg    { background: linear-gradient(135deg, #d4cfca, #f4f1ec); width: 100%; height: 100%; }
+.thumb-glass { background: rgba(100,160,220,.25); width: 100%; height: 100%; }
+.thumb-ped   { background: #e8e4df; width: 100%; height: 100%; }
+
+/* ── No data ──────────────────────────────────────────── */
+.no-data { text-align: center; padding: 48px; color: var(--muted); font-size: .85rem; }
 </style>
 </head>
 <body>
 
-<!-- GATE -->
+<!-- ── Login gate ──────────────────────────────────────── -->
 <div id="gate">
   <div class="gate-card">
-    <div class="gate-logo">elt<span>ru</span></div>
-    <div class="gate-sub">eltru.com</div>
-    <div class="gate-heading">Admin Access</div>
-    <input type="password" id="gate-pw" class="gate-input" placeholder="Admin password" autocomplete="current-password">
+    <div class="gate-logo">eltru.</div>
+    <div class="gate-sub">Admin Portal</div>
+    <label class="gate-label" for="gate-pw">Admin Password</label>
+    <input id="gate-pw" class="gate-input" type="password" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')doLogin()">
     <div class="gate-err" id="gate-err"></div>
-    <button class="btn-primary" id="gate-btn" onclick="submitPassword()">Enter</button>
+    <button class="gate-btn" id="gate-btn" onclick="doLogin()">Enter Admin</button>
   </div>
 </div>
 
-<!-- APP -->
-<div id="app">
+<!-- ── App ─────────────────────────────────────────────── -->
+<div id="app" style="display:none">
   <header class="app-header">
-    <div class="app-logo">elt<span>ru</span></div>
-    <div class="app-title">Admin Panel</div>
-    <button class="btn-logout" onclick="logout()">Log out</button>
+    <div class="header-logo">eltru. <span>admin</span></div>
+    <nav class="header-nav">
+      <button class="nav-btn active" id="nav-products" onclick="showSection('products')">Products &amp; Pricing</button>
+      <button class="nav-btn" id="nav-orders" onclick="showSection('orders')">Orders</button>
+    </nav>
+    <button class="btn-logout" onclick="doLogout()">Logout</button>
   </header>
 
-  <nav class="tabs-bar">
-    <button class="tab-btn active" onclick="showTab('layers')">Layer Assets</button>
-    <button class="tab-btn"        onclick="showTab('pricing')">Pricing</button>
-    <button class="tab-btn"        onclick="showTab('configs')">Configurations</button>
-    <button class="tab-btn"        onclick="showTab('products')">Products</button>
-  </nav>
-
-  <!-- ── TAB 1: LAYER ASSETS ── -->
-  <div id="tab-layers" class="tab-panel active">
-    <div class="stats-row">
-      <div class="stat-chip">
-        <div class="stat-num" id="stat-total">—</div>
-        <div class="stat-label">Layers uploaded</div>
+  <!-- Products & Pricing -->
+  <div id="section-products">
+    <div class="switchers-bar">
+      <div class="brand-switcher">
+        <button class="brand-btn active" id="brand-knoll-reff" onclick="selectBrand('knoll-reff')">Knoll Reff</button>
+        <button class="brand-btn" id="brand-steelcase-avenir" onclick="selectBrand('steelcase-avenir')">Steelcase Avenir</button>
       </div>
-      <div class="stat-chip">
-        <div class="stat-num" id="stat-types">—</div>
-        <div class="stat-label">Layer types covered</div>
+      <div class="switcher-divider"></div>
+      <div class="style-switcher">
+        <button class="style-btn active" id="style-straight" onclick="selectStyle('straight')">Straight</button>
+        <button class="style-btn" id="style-l-shape" onclick="selectStyle('l-shape')">L-Shape</button>
       </div>
     </div>
-
-    <div class="card">
-      <div class="card-title">Upload Layer Image</div>
-      <div class="form-row">
-        <div class="fg">
-          <label class="fl">Brand</label>
-          <select class="fi" id="up-brand" onchange="onBrandChange()">
-            <option value="">— Select brand —</option>
-          </select>
-        </div>
-        <div class="fg">
-          <label class="fl">Style</label>
-          <select class="fi" id="up-style">
-            <option value="">— Select style —</option>
-          </select>
-        </div>
-        <div class="fg">
-          <label class="fl">Layer Type</label>
-          <select class="fi" id="up-type" onchange="onTypeChange()">
-            <option value="">— Select type —</option>
-            <option value="background">background</option>
-            <option value="worksurface">worksurface</option>
-            <option value="panel">panel (fabric)</option>
-            <option value="trim">trim (color)</option>
-            <option value="glass">glass</option>
-            <option value="pedestal">pedestal</option>
-          </select>
-        </div>
-        <div class="fg" id="up-option-wrap" style="display:none;">
-          <label class="fl" id="up-option-label">Option</label>
-          <select class="fi" id="up-option">
-            <option value="">— Select option —</option>
-          </select>
-        </div>
-        <div class="fg" id="up-height-wrap" style="display:none;">
-          <label class="fl">Height (optional)</label>
-          <select class="fi" id="up-height">
-            <option value="">None</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="file-drop" id="file-drop" onclick="document.getElementById('file-input').click()"
-           ondragover="event.preventDefault(); this.classList.add('drag-over')"
-           ondragleave="this.classList.remove('drag-over')"
-           ondrop="handleDrop(event)">
-        <div class="file-drop-label">Click to choose or drag a file here</div>
-        <div class="file-drop-hint">Accepts .webp or .png</div>
-        <div class="file-name-display" id="file-name-display"></div>
-      </div>
-      <input type="file" id="file-input" accept=".webp,.png,image/webp,image/png" style="display:none" onchange="onFileChange(this)">
-
-      <div class="upload-progress" id="upload-progress">
-        <div class="upload-progress-bar" id="upload-progress-bar"></div>
-      </div>
-
-      <button class="btn-upload" id="btn-upload" onclick="doUpload()">Upload Layer</button>
-      <div id="upload-msg"></div>
-    </div>
-
-    <div style="margin:12px 0 6px;display:flex;gap:6px;flex-wrap:wrap" id="layer-type-filters">
-      <button class="layer-filter-btn active" onclick="setLayerFilter(null, this)">All</button>
-      <button class="layer-filter-btn" onclick="setLayerFilter('background', this)">background</button>
-      <button class="layer-filter-btn" onclick="setLayerFilter('panel', this)">panel</button>
-      <button class="layer-filter-btn" onclick="setLayerFilter('trim', this)">trim</button>
-      <button class="layer-filter-btn" onclick="setLayerFilter('glass', this)">glass</button>
-      <button class="layer-filter-btn" onclick="setLayerFilter('pedestal', this)">pedestal</button>
-      <button class="layer-filter-btn" onclick="setLayerFilter('worksurface', this)">worksurface</button>
-    </div>
-
-    <div id="layers-grid-wrap">
-      <div style="color:var(--muted); font-size:.9rem; padding:8px 0;">
-        <span class="inline-spinner"></span> Loading layers…
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:20px">
-      <div class="card-title">Coverage Matrix</div>
-      <p style="font-size:.82rem;color:var(--muted);margin-bottom:16px">Which layer types have been uploaded for each brand &amp; style combination.</p>
-      <div id="coverage-matrix-wrap" style="overflow-x:auto">
-        <div style="color:var(--muted);font-size:.85rem">Loading…</div>
-      </div>
+    <div class="content-area">
+      <div id="products-loading" class="loading-state"></div>
+      <div id="products-error" style="display:none" class="error-state"></div>
+      <div id="size-cards"></div>
+      <div id="pedestal-section"></div>
     </div>
   </div>
 
-  <!-- ── TAB 2: PRICING ── -->
-  <div id="tab-pricing" class="tab-panel">
-    <div class="card">
-      <div class="card-title">Pricing Rules</div>
-      <p style="font-size:.82rem; color:var(--muted); margin-bottom:20px;">
-        Click a price to edit it inline. Press Enter or ✓ to save.
-      </p>
-      <div class="table-wrap">
-        <table id="pricing-table">
-          <thead>
-            <tr>
-              <th>Label</th>
-              <th>Type</th>
-              <th>Price (USD)</th>
-              <th>Updated</th>
-            </tr>
-          </thead>
-          <tbody id="pricing-tbody">
-            <tr><td colspan="4" style="padding:24px; color:var(--muted);">
-              <span class="inline-spinner"></span> Loading…
-            </td></tr>
-          </tbody>
-        </table>
+  <!-- Orders -->
+  <div id="section-orders" style="display:none">
+    <div class="content-area">
+      <div class="orders-header">
+        <div class="orders-filters">
+          <input type="text" class="orders-search" id="orders-search" placeholder="Search code or client…" oninput="filterOrders()">
+          <input type="date" class="date-input" id="orders-from" onchange="filterOrders()">
+          <input type="date" class="date-input" id="orders-to" onchange="filterOrders()">
+        </div>
+        <button class="btn-csv" onclick="exportCSV()">Export CSV</button>
       </div>
-    </div>
-  </div>
-
-  <!-- ── TAB 3: CONFIGURATIONS ── -->
-  <div id="tab-configs" class="tab-panel">
-    <div class="search-row" style="flex-wrap:wrap;gap:8px">
-      <input type="text" id="config-search" class="search-input" placeholder="Search by code or client…" oninput="filterConfigs()">
-      <input type="date" id="config-date-from" class="search-input" style="width:150px" onchange="filterConfigs()" title="From date">
-      <input type="date" id="config-date-to"   class="search-input" style="width:150px" onchange="filterConfigs()" title="To date">
-      <button onclick="exportConfigsCSV()" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:0.8rem;font-weight:600;cursor:pointer;white-space:nowrap">↓ Export CSV</button>
-      <span class="count-badge" id="config-count"></span>
-    </div>
-    <div class="card" style="padding:0; overflow:hidden;">
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Client</th>
-              <th>Notes</th>
-              <th>Price</th>
-              <th>Qty</th>
-              <th>Created</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="configs-tbody">
-            <tr><td colspan="7" style="padding:24px; color:var(--muted);">
-              <span class="inline-spinner"></span> Loading…
-            </td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── TAB 4: PRODUCTS ── -->
-  <div id="tab-products" class="tab-panel">
-    <div id="products-body">
-      <div style="color:var(--muted); font-size:.9rem; padding:8px 0;">
-        <span class="inline-spinner"></span> Loading product data…
+      <div id="orders-loading" class="loading-state"></div>
+      <div id="orders-table-wrap" style="display:none">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Date</th>
+                <th>Size</th>
+                <th>Client</th>
+                <th>Price</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="orders-tbody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<div id="toast"></div>
+<!-- Toast container & shared file input -->
+<div id="toasts"></div>
+<input type="file" id="shared-file-input" accept="image/png,image/webp,image/jpeg" style="display:none">
 
 <script>
 // ── State ─────────────────────────────────────────────────────────────────
-let adminPw    = '';
-let OPTIONS    = null;   // from /api/options
-let ALL_LAYERS = [];     // from /api/admin/layers
-let ALL_CONFIGS = [];
-let allConfigsRaw = [];
-let layerTypeFilter = null;  // null = all
+let adminToken  = sessionStorage.getItem('adminToken') || '';
+let currentBrand = 'knoll-reff';
+let currentStyle = 'straight';
+let pageData    = null;   // response from pricing-by-size
+let layersData  = null;   // response from layers-by-brand-style
+let allOrders   = [];
+let pendingUpload = null; // { layerType, optionSlug }
 
-// ── Gate ──────────────────────────────────────────────────────────────────
-document.getElementById('gate-pw').addEventListener('keydown', e => {
-  if (e.key === 'Enter') submitPassword();
-});
+const BRAND_NAMES = { 'knoll-reff': 'Knoll Reff', 'steelcase-avenir': 'Steelcase Avenir' };
+const STYLE_NAMES = { 'straight': 'Straight', 'l-shape': 'L-Shape' };
+const FABRIC_HEX  = { graphite:'#3A3A3A', mystique:'#5A4E6E', osprey:'#6B9BAF', fossil:'#8A7E6A', zinc:'#7A7A7A' };
 
-async function submitPassword() {
+// ── Auth ──────────────────────────────────────────────────────────────────
+async function doLogin() {
   const pw = document.getElementById('gate-pw').value.trim();
   if (!pw) return;
-  const btn   = document.getElementById('gate-btn');
-  const errEl = document.getElementById('gate-err');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span>';
-  errEl.textContent = '';
-
+  const btn = document.getElementById('gate-btn');
+  btn.disabled = true; btn.textContent = 'Checking…';
+  document.getElementById('gate-err').textContent = '';
   try {
-    const res  = await fetch('/api/auth/admin', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pw }),
+    const r = await fetch('/api/auth/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: pw })
     });
-    const data = await res.json();
-    if (data.ok) {
-      adminPw = pw;
+    const d = await r.json();
+    if (d.ok) {
+      adminToken = pw;
+      sessionStorage.setItem('adminToken', pw);
       document.getElementById('gate').style.display = 'none';
-      document.getElementById('app').style.display  = 'block';
-      loadAll();
+      document.getElementById('app').style.display = 'flex';
+      document.getElementById('app').style.flexDirection = 'column';
+      await loadProductsData();
     } else {
-      errEl.textContent = 'Incorrect password.';
+      document.getElementById('gate-err').textContent = 'Incorrect password.';
       const inp = document.getElementById('gate-pw');
       inp.classList.add('shake');
-      inp.addEventListener('animationend', () => inp.classList.remove('shake'), { once: true });
-      inp.value = ''; inp.focus();
+      setTimeout(() => inp.classList.remove('shake'), 400);
     }
-  } catch { errEl.textContent = 'Connection error.'; }
-  finally  { btn.disabled = false; btn.textContent = 'Enter'; }
-}
-
-function logout() {
-  adminPw = '';
-  document.getElementById('gate').style.display = 'flex';
-  document.getElementById('app').style.display  = 'none';
-  document.getElementById('gate-pw').value = '';
-}
-
-// ── Load everything ────────────────────────────────────────────────────────
-async function loadAll() {
-  await Promise.all([loadOptions(), loadLayers(), loadConfigs(), loadPricing()]);
-  // Coverage matrix needs both OPTIONS and ALL_LAYERS
-  renderCoverageMatrix();
-}
-
-async function loadOptions() {
-  try {
-    const res = await fetch('/api/options');
-    OPTIONS = await res.json();
-    populateUploadForm();
-    renderProducts();
-  } catch (err) {
-    console.error('options load failed', err);
-  }
-}
-
-// ── Tabs ──────────────────────────────────────────────────────────────────
-function showTab(name) {
-  document.querySelectorAll('.tab-btn').forEach((b,i) => {
-    const names = ['layers','pricing','configs','products'];
-    b.classList.toggle('active', names[i] === name);
-  });
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById(`tab-${name}`).classList.add('active');
-}
-
-// ── Toast ─────────────────────────────────────────────────────────────────
-let _toastT;
-function toast(msg, ok = true) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.background = ok ? 'var(--ok)' : 'var(--err)';
-  t.style.opacity = '1';
-  clearTimeout(_toastT);
-  _toastT = setTimeout(() => t.style.opacity = '0', 2500);
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// TAB 1 — LAYER ASSETS
-// ─────────────────────────────────────────────────────────────────────────
-async function loadLayers() {
-  try {
-    const res  = await fetch('/api/admin/layers', { headers: { 'Authorization': adminPw } });
-    const data = await res.json();
-    ALL_LAYERS = data.layers || [];
-    renderLayerStats();
-    renderLayerGrid();
-    renderCoverageMatrix();
-  } catch (err) {
-    document.getElementById('layers-grid-wrap').innerHTML =
-      `<div class="msg-err">Failed to load layers: ${err.message}</div>`;
-  }
-}
-
-function renderLayerStats() {
-  document.getElementById('stat-total').textContent = ALL_LAYERS.length;
-  const types = new Set(ALL_LAYERS.map(l => l.layer_type));
-  document.getElementById('stat-types').textContent = types.size;
-}
-
-function setLayerFilter(type, btn) {
-  layerTypeFilter = type;
-  document.querySelectorAll('.layer-filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderLayerGrid();
-}
-
-function renderLayerGrid() {
-  const wrap = document.getElementById('layers-grid-wrap');
-  const layers = layerTypeFilter
-    ? ALL_LAYERS.filter(l => l.layer_type === layerTypeFilter)
-    : ALL_LAYERS;
-
-  if (!layers.length) {
-    wrap.innerHTML = `<div class="empty-state">No ${layerTypeFilter ? `"${layerTypeFilter}" ` : ''}layers uploaded yet.</div>`;
-    return;
-  }
-
-  // Group by brand_id → style_id
-  const groups = {};
-  for (const l of layers) {
-    const key = `${l.brand_id}__${l.style_id}`;
-    if (!groups[key]) groups[key] = { brand_id: l.brand_id, style_id: l.style_id, layers: [] };
-    groups[key].layers.push(l);
-  }
-
-  let html = '';
-  for (const g of Object.values(groups)) {
-    const brand = OPTIONS?.brands?.find(b => b.id === g.brand_id);
-    const style = brand?.styles?.find(s => s.id === g.style_id);
-    html += `<div class="layer-group-title">${brand?.name || g.brand_id} — ${style?.name || g.style_id}</div>`;
-    html += '<div class="layer-grid">';
-    for (const l of g.layers) {
-      const optLabel = resolveOptionLabel(l);
-      const layerDataAttr = `data-brand-id="${l.brand_id}" data-style-id="${l.style_id}" data-layer-type="${l.layer_type}" data-fabric-id="${l.fabric_id||''}" data-trim-id="${l.trim_id||''}" data-glass-id="${l.glass_id||''}" data-pedestal-id="${l.pedestal_id||''}"`;
-      html += `
-        <div class="layer-card" id="layer-card-${l.id}">
-          <img class="layer-thumb" src="${l.storage_url}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-          <div class="layer-thumb-placeholder" style="display:none">No image</div>
-          <div class="layer-info">
-            <span class="layer-type-badge">${l.layer_type}</span>
-            <div class="layer-meta">${optLabel ? optLabel : (l.storage_path || '')}</div>
-          </div>
-          <div class="layer-actions">
-            <button class="btn-replace" onclick="replaceLayer('${l.id}', this)" ${layerDataAttr}>Replace</button>
-            <button class="btn-del" onclick="deleteLayer('${l.id}','${escHtml(l.storage_path || '')}')">Delete</button>
-          </div>
-        </div>`;
-    }
-    html += '</div>';
-  }
-
-  wrap.innerHTML = html;
-}
-
-function renderCoverageMatrix() {
-  const wrap = document.getElementById('coverage-matrix-wrap');
-  if (!OPTIONS || !ALL_LAYERS.length) {
-    wrap.innerHTML = '<div style="color:var(--muted);font-size:.85rem">Upload layers to see coverage.</div>';
-    return;
-  }
-
-  const TYPES = ['background','panel','trim','glass','pedestal','worksurface'];
-
-  // Build set of covered combos: "brandId__styleId__layerType"
-  const covered = new Set(ALL_LAYERS.map(l => `${l.brand_id}__${l.style_id}__${l.layer_type}`));
-
-  let html = `<table class="coverage-table"><thead><tr><th>Brand / Style</th>`;
-  for (const t of TYPES) html += `<th>${t}</th>`;
-  html += '</tr></thead><tbody>';
-
-  for (const brand of (OPTIONS.brands || [])) {
-    for (const style of (brand.styles || [])) {
-      html += `<tr><td>${brand.name} — ${style.name}</td>`;
-      for (const t of TYPES) {
-        const has = covered.has(`${brand.id}__${style.id}__${t}`);
-        html += `<td class="${has ? 'cov-yes' : 'cov-no'}">${has ? '✓' : '·'}</td>`;
-      }
-      html += '</tr>';
-    }
-  }
-
-  html += '</tbody></table>';
-  wrap.innerHTML = html;
-}
-
-function replaceLayer(layerId, btn) {
-  const inp = document.createElement('input');
-  inp.type = 'file';
-  inp.accept = '.webp,.png,image/webp,image/png';
-  inp.onchange = async () => {
-    const file = inp.files[0];
-    if (!file) return;
-
-    // Read layer context from data attributes on the button
-    const brandId    = btn.getAttribute('data-brand-id');
-    const styleId    = btn.getAttribute('data-style-id');
-    const layerType  = btn.getAttribute('data-layer-type');
-    const fabricId   = btn.getAttribute('data-fabric-id');
-    const trimId     = btn.getAttribute('data-trim-id');
-    const glassId    = btn.getAttribute('data-glass-id');
-    const pedestalId = btn.getAttribute('data-pedestal-id');
-
-    // Resolve slugs
-    const brand   = OPTIONS?.brands?.find(b => b.id === brandId);
-    const style   = brand?.styles?.find(s => s.id === styleId);
-    const fabric  = fabricId   ? OPTIONS?.fabrics?.find(f => f.id === fabricId)        : null;
-    const trim    = trimId     ? OPTIONS?.trims?.find(t => t.id === trimId)            : null;
-    const glass   = glassId    ? OPTIONS?.glass_options?.find(g => g.id === glassId)   : null;
-    const pedestal= pedestalId ? OPTIONS?.pedestals?.find(p => p.id === pedestalId)    : null;
-    const option  = fabric || trim || glass || pedestal;
-
-    if (!brand || !style) { toast('Cannot resolve brand/style for this layer', false); return; }
-
-    btn.disabled = true; btn.textContent = 'Uploading…';
-
-    const fd = new FormData();
-    fd.append('file',        file);
-    fd.append('brand_slug',  brand.slug);
-    fd.append('style_slug',  style.slug);
-    fd.append('layer_type',  layerType);
-    fd.append('option_slug', option?.slug || '');
-
-    try {
-      const res  = await fetch('/api/admin/layers/upload', {
-        method: 'POST',
-        headers: { 'Authorization': adminPw },
-        body: fd,
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error);
-      // Update thumbnail
-      const card = document.getElementById(`layer-card-${layerId}`);
-      if (card) {
-        const img = card.querySelector('.layer-thumb');
-        if (img) { img.style.display = ''; img.src = data.storage_url + '?t=' + Date.now(); }
-      }
-      toast('Layer replaced');
-    } catch (err) {
-      toast('Replace failed: ' + err.message, false);
-    } finally {
-      btn.disabled = false; btn.textContent = 'Replace';
-    }
-  };
-  inp.click();
-}
-
-function resolveOptionLabel(l) {
-  if (!OPTIONS) return null;
-  if (l.fabric_id)   return OPTIONS.fabrics?.find(f => f.id === l.fabric_id)?.name || null;
-  if (l.trim_id)     return OPTIONS.trims?.find(t => t.id === l.trim_id)?.name || null;
-  if (l.glass_id)    return OPTIONS.glass_options?.find(g => g.id === l.glass_id)?.name || null;
-  if (l.pedestal_id) return OPTIONS.pedestals?.find(p => p.id === l.pedestal_id)?.name || null;
-  return null;
-}
-
-async function deleteLayer(id, storagePath) {
-  if (!confirm(`Delete this layer image?\n${storagePath || id}`)) return;
-  try {
-    const res  = await fetch(`/api/admin/layers/${id}`, {
-      method: 'DELETE', headers: { 'Authorization': adminPw },
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error);
-    ALL_LAYERS = ALL_LAYERS.filter(l => l.id !== id);
-    document.getElementById(`layer-card-${id}`)?.remove();
-    renderLayerStats();
-    toast('Layer deleted');
-  } catch (err) { toast('Delete failed: ' + err.message, false); }
-}
-
-// Upload form ───────────────────────────────────────────────────────────────
-function populateUploadForm() {
-  if (!OPTIONS) return;
-  const brandSel = document.getElementById('up-brand');
-  brandSel.innerHTML = '<option value="">— Select brand —</option>' +
-    (OPTIONS.brands || []).map(b => `<option value="${b.slug}">${b.name}</option>`).join('');
-}
-
-function onBrandChange() {
-  const brandSlug = document.getElementById('up-brand').value;
-  const styleSel  = document.getElementById('up-style');
-  const heightSel = document.getElementById('up-height');
-
-  const brand = OPTIONS?.brands?.find(b => b.slug === brandSlug);
-  styleSel.innerHTML  = '<option value="">— Select style —</option>' +
-    (brand?.styles || []).map(s => `<option value="${s.slug}">${s.name}</option>`).join('');
-
-  const heights = OPTIONS?.heights?.[brandSlug] || [];
-  heightSel.innerHTML = '<option value="">None</option>' +
-    heights.map(h => `<option value="${h.slug || h.label}">${h.label}</option>`).join('');
-}
-
-function onTypeChange() {
-  const type     = document.getElementById('up-type').value;
-  const optWrap  = document.getElementById('up-option-wrap');
-  const optSel   = document.getElementById('up-option');
-  const optLabel = document.getElementById('up-option-label');
-  const htWrap   = document.getElementById('up-height-wrap');
-
-  const optionTypes = { panel: 'fabrics', trim: 'trims', glass: 'glass_options', pedestal: 'pedestals' };
-
-  if (optionTypes[type]) {
-    const items  = OPTIONS?.[optionTypes[type]] || [];
-    const labels = { panel: 'Fabric', trim: 'Trim Color', glass: 'Glass Option', pedestal: 'Pedestal' };
-    optLabel.textContent = labels[type] || 'Option';
-    optSel.innerHTML = '<option value="">— Select option —</option>' +
-      items.map(i => `<option value="${i.slug}">${i.name}</option>`).join('');
-    optWrap.style.display = '';
-  } else {
-    optWrap.style.display = 'none';
-  }
-
-  htWrap.style.display = type && type !== 'background' ? '' : 'none';
-}
-
-let selectedFile = null;
-
-function onFileChange(input) {
-  selectedFile = input.files[0] || null;
-  document.getElementById('file-name-display').textContent = selectedFile ? selectedFile.name : '';
-}
-
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('file-drop').classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file) {
-    selectedFile = file;
-    document.getElementById('file-name-display').textContent = file.name;
-  }
-}
-
-async function doUpload() {
-  const brandSlug  = document.getElementById('up-brand').value;
-  const styleSlug  = document.getElementById('up-style').value;
-  const layerType  = document.getElementById('up-type').value.split(' ')[0]; // strip "(fabric)" etc
-  const optionSlug = document.getElementById('up-option').value;
-  const heightSlug = document.getElementById('up-height').value;
-
-  if (!brandSlug || !styleSlug || !layerType) {
-    showUploadMsg('Please select brand, style, and layer type.', false); return;
-  }
-  if (!selectedFile) { showUploadMsg('Please choose a file.', false); return; }
-
-  const btn = document.getElementById('btn-upload');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Uploading…';
-  showUploadMsg('');
-
-  const bar = document.getElementById('upload-progress');
-  const barFill = document.getElementById('upload-progress-bar');
-  bar.style.display = 'block';
-  barFill.style.width = '30%';
-
-  const fd = new FormData();
-  fd.append('brand_slug',  brandSlug);
-  fd.append('style_slug',  styleSlug);
-  fd.append('layer_type',  layerType);
-  fd.append('option_slug', optionSlug || '');
-  fd.append('height_slug', heightSlug || '');
-  fd.append('file',        selectedFile);
-
-  try {
-    barFill.style.width = '60%';
-    const res  = await fetch('/api/admin/layers/upload', {
-      method: 'POST',
-      headers: { 'Authorization': adminPw },
-      body: fd,
-    });
-    const data = await res.json();
-    barFill.style.width = '100%';
-
-    if (!data.success) throw new Error(data.error);
-    showUploadMsg(`Uploaded! URL: ${data.storage_url}`, true);
-    selectedFile = null;
-    document.getElementById('file-name-display').textContent = '';
-    document.getElementById('file-input').value = '';
-    toast('Layer uploaded successfully');
-    await loadLayers();
-  } catch (err) {
-    showUploadMsg('Upload failed: ' + err.message, false);
+  } catch (e) {
+    document.getElementById('gate-err').textContent = 'Connection error.';
   } finally {
-    btn.disabled = false;
-    btn.textContent = 'Upload Layer';
-    setTimeout(() => { bar.style.display = 'none'; barFill.style.width = '0%'; }, 1000);
+    btn.disabled = false; btn.textContent = 'Enter Admin';
   }
 }
 
-function showUploadMsg(msg, ok = true) {
-  const el = document.getElementById('upload-msg');
-  if (!msg) { el.innerHTML = ''; return; }
-  el.innerHTML = `<div class="${ok ? 'msg-ok' : 'msg-err'}">${msg}</div>`;
+function doLogout() {
+  sessionStorage.removeItem('adminToken');
+  adminToken = '';
+  location.reload();
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// TAB 2 — PRICING
-// ─────────────────────────────────────────────────────────────────────────
-async function loadPricing() {
+// On page load — auto-login if token cached
+if (adminToken) {
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('app').style.flexDirection = 'column';
+  loadProductsData();
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────
+function showSection(section) {
+  document.getElementById('section-products').style.display = section === 'products' ? '' : 'none';
+  document.getElementById('section-orders').style.display   = section === 'orders'   ? '' : 'none';
+  document.getElementById('nav-products').classList.toggle('active', section === 'products');
+  document.getElementById('nav-orders').classList.toggle('active',   section === 'orders');
+  if (section === 'orders' && allOrders.length === 0) loadOrders();
+}
+
+function selectBrand(slug) {
+  currentBrand = slug;
+  document.querySelectorAll('.brand-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('brand-' + slug).classList.add('active');
+  loadProductsData();
+}
+
+function selectStyle(slug) {
+  currentStyle = slug;
+  document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('style-' + slug).classList.add('active');
+  loadProductsData();
+}
+
+// ── Load products data ────────────────────────────────────────────────────
+async function loadProductsData() {
+  document.getElementById('products-loading').style.display = '';
+  document.getElementById('products-error').style.display = 'none';
+  document.getElementById('size-cards').innerHTML = '';
+  document.getElementById('pedestal-section').innerHTML = '';
+
   try {
-    const res  = await fetch('/api/admin/pricing', { headers: { 'Authorization': adminPw } });
-    const data = await res.json();
-    renderPricingTable(data.pricing || []);
-  } catch (err) {
-    document.getElementById('pricing-tbody').innerHTML =
-      `<tr><td colspan="4"><div class="msg-err">Failed: ${err.message}</div></td></tr>`;
+    const qs = `brand_slug=${currentBrand}&style_slug=${currentStyle}`;
+    const [pRes, lRes] = await Promise.all([
+      apiFetch(`/api/admin/pricing-by-size?${qs}`),
+      apiFetch(`/api/admin/layers-by-brand-style?${qs}`)
+    ]);
+    if (!pRes.success) throw new Error(pRes.error || 'Failed to load pricing');
+
+    pageData   = pRes;
+    layersData = lRes.layers || {};
+    document.getElementById('products-loading').style.display = 'none';
+    renderSizeCards();
+    renderPedestalSection();
+  } catch (e) {
+    document.getElementById('products-loading').style.display = 'none';
+    const errEl = document.getElementById('products-error');
+    errEl.style.display = '';
+    errEl.textContent = `Error loading data: ${e.message}. If this is a new setup, run the SQL migration and seedPricing.js first.`;
   }
 }
 
-function renderPricingTable(rows) {
-  document.getElementById('pricing-tbody').innerHTML = rows.map(p => {
-    const date = p.updated_at
-      ? new Date(p.updated_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
-      : '—';
-    const typeLabel = p.brand_id ? 'Base' : p.glass_id ? 'Glass add-on' : p.pedestal_id ? 'Pedestal add-on' : 'Add-on';
-    return `<tr id="price-row-${p.id}">
-      <td>${p.label || '—'}</td>
-      <td style="color:var(--muted)">${typeLabel}</td>
-      <td>
-        <div class="price-cell" id="price-cell-${p.id}">
-          <span class="price-display" title="Click to edit" onclick="editPrice('${p.id}','${p.price_usd}')">
-            $${Number(p.price_usd).toLocaleString('en-US',{minimumFractionDigits:0})}
-          </span>
-        </div>
-      </td>
-      <td class="muted">${date}</td>
+// ── Render size cards ─────────────────────────────────────────────────────
+function renderSizeCards() {
+  const container = document.getElementById('size-cards');
+  container.innerHTML = (pageData.sizes || []).map(size => buildSizeCard(size)).join('');
+}
+
+function buildSizeCard(size) {
+  const isKnoll  = currentBrand === 'knoll-reff';
+  const isLShape = currentStyle === 'l-shape';
+  const bgLayer  = layersData.background;
+  const base     = pageData.pricing.base[size.id];
+  const heights  = pageData.heights || [];
+  const shortH   = heights[0];
+  const tallH    = heights[1];
+
+  const headerThumb = bgLayer
+    ? `<img src="${esc(bgLayer.url)}" alt="background">`
+    : `<div class="thumb-bg"></div>`;
+
+  return `
+<div class="size-card" id="card-${size.id}">
+  <div class="card-header">
+    <div class="card-header-thumb">${headerThumb}</div>
+    <div class="card-header-info">
+      <div class="card-size-label">${esc(size.label)}</div>
+      <div class="card-brand-style">${BRAND_NAMES[currentBrand]} · ${STYLE_NAMES[currentStyle]}</div>
+    </div>
+    <div class="card-base-price">
+      <div class="base-price-label">Base price</div>
+      <div class="base-price-row">
+        <span class="base-price-sign">$</span>
+        <input type="number" class="base-price-input price-input"
+          value="${base ? base.price : ''}"
+          placeholder="0"
+          min="0" step="1"
+          data-type="base"
+          data-option-id=""
+          data-size-id="${size.id}"
+          data-original="${base ? base.price : ''}">
+      </div>
+      <div class="base-price-sub">per unit</div>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <!-- HEIGHT -->
+    <div class="section-divider">Height</div>
+    ${shortH ? buildHeightRow(size, shortH, true) : ''}
+    ${tallH  ? buildHeightRow(size, tallH,  false) : ''}
+
+    <!-- PANEL FABRICS -->
+    <div class="section-divider">Panel Fabrics</div>
+    ${(pageData.fabrics || []).map(f => buildFabricRow(size, f)).join('')}
+
+    <!-- TRIM COLORS -->
+    <div class="section-divider">Trim Colors</div>
+    ${(pageData.trims || []).map(t => buildTrimRow(size, t)).join('')}
+
+    <!-- GLASS -->
+    <div class="section-divider">Glass</div>
+    ${buildGlassRows(size, isKnoll, isLShape)}
+
+    <!-- LAYER IMAGES -->
+    <div class="section-divider">Layer Images</div>
+    ${buildMiscRows()}
+  </div>
+
+  <div class="card-footer">
+    <span class="footer-hint">Press Enter on any price to save individually</span>
+    <button class="btn-save-all" onclick="saveAllInCard('${size.id}')">Save all prices</button>
+  </div>
+</div>`;
+}
+
+function buildHeightRow(size, height, isShort) {
+  if (isShort) {
+    return `
+<div class="option-row">
+  ${heightThumb(true)}
+  <div class="row-info">
+    <div class="row-name">${esc(height.label)} — standard height</div>
+    <div class="row-desc">Included in base price</div>
+  </div>
+  <div class="row-price"><span class="badge badge-included">Included</span></div>
+  <div class="row-actions"></div>
+</div>`;
+  }
+  const p = pageData.pricing.height_addons[size.id]?.[height.id];
+  return `
+<div class="option-row">
+  ${heightThumb(false)}
+  <div class="row-info">
+    <div class="row-name">${esc(height.label)} — tall panels</div>
+    <div class="row-desc">Height upgrade add-on</div>
+  </div>
+  <div class="row-price">
+    <div class="price-field">
+      <span class="price-prefix">+$</span>
+      <input type="number" class="row-price-input price-input"
+        value="${p ? p.price : ''}" placeholder="0" min="0" step="1"
+        data-type="height"
+        data-option-id="${height.id}"
+        data-size-id="${size.id}"
+        data-original="${p ? p.price : ''}">
+    </div>
+  </div>
+  <div class="row-actions"></div>
+</div>`;
+}
+
+function buildFabricRow(size, fabric) {
+  const p     = pageData.pricing.fabric_addons[fabric.id];
+  const layer = layersData.panel?.[fabric.slug];
+  const hex   = FABRIC_HEX[fabric.slug] || '#ccc';
+  const thumb = layer
+    ? `<div class="row-thumb uploaded"><img src="${esc(layer.url)}" alt="${esc(fabric.name)}"><span class="status-dot green"></span></div>`
+    : `<div class="row-thumb missing" style="background:${hex}"><span class="status-dot red"></span></div>`;
+  const upCls = layer ? 'uploaded' : 'missing';
+  const upTxt = layer ? 'Replace' : 'Upload';
+
+  return `
+<div class="option-row">
+  ${thumb}
+  <div class="row-info">
+    <div class="row-name"><span class="swatch" style="background:${hex}"></span>${esc(fabric.name)}</div>
+    <div class="row-desc">${esc(fabric.description || '')}</div>
+  </div>
+  <div class="row-price">
+    <div class="price-field">
+      <span class="price-prefix">+$</span>
+      <input type="number" class="row-price-input price-input"
+        value="${p ? p.price : ''}" placeholder="0" min="0" step="1"
+        data-type="fabric"
+        data-option-id="${fabric.id}"
+        data-size-id=""
+        data-original="${p ? p.price : ''}">
+    </div>
+  </div>
+  <div class="row-actions">
+    <button class="btn-upload ${upCls}" onclick="triggerUpload('panel','${fabric.slug}')">${upTxt}</button>
+  </div>
+</div>`;
+}
+
+function buildTrimRow(size, trim) {
+  const p     = pageData.pricing.trim_addons[trim.id];
+  const layer = layersData.trim?.[trim.slug];
+  const hex   = trim.hex_color || '#ccc';
+  const thumb = layer
+    ? `<div class="row-thumb uploaded"><img src="${esc(layer.url)}" alt="${esc(trim.name)}"><span class="status-dot green"></span></div>`
+    : `<div class="row-thumb missing" style="background:${hex};border:2px solid rgba(0,0,0,.08)"><span class="status-dot red"></span></div>`;
+  const upCls = layer ? 'uploaded' : 'missing';
+  const upTxt = layer ? 'Replace' : 'Upload';
+
+  return `
+<div class="option-row">
+  ${thumb}
+  <div class="row-info">
+    <div class="row-name"><span class="swatch" style="background:${hex}"></span>${esc(trim.name)} Trim</div>
+    <div class="row-desc">Panel trim / frame color</div>
+  </div>
+  <div class="row-price">
+    <div class="price-field">
+      <span class="price-prefix">+$</span>
+      <input type="number" class="row-price-input price-input"
+        value="${p ? p.price : ''}" placeholder="0" min="0" step="1"
+        data-type="trim"
+        data-option-id="${trim.id}"
+        data-size-id=""
+        data-original="${p ? p.price : ''}">
+    </div>
+  </div>
+  <div class="row-actions">
+    <button class="btn-upload ${upCls}" onclick="triggerUpload('trim','${trim.slug}')">${upTxt}</button>
+  </div>
+</div>`;
+}
+
+function buildGlassRows(size, isKnoll, isLShape) {
+  if (isKnoll) {
+    const layer = layersData.glass?.['clear-glass'] || layersData.worksurface;
+    const thumb = layer
+      ? `<div class="row-thumb uploaded"><img src="${esc(layer.url)}" alt="glass"><span class="status-dot green"></span></div>`
+      : `<div class="row-thumb missing"><div class="thumb-glass"></div><span class="status-dot red"></span></div>`;
+    const upCls = layer ? 'uploaded' : 'missing';
+    return `
+<div class="option-row">
+  ${thumb}
+  <div class="row-info">
+    <div class="row-name">Worksurface + Glass</div>
+    <div class="row-desc">Always included standard with Knoll Reff</div>
+  </div>
+  <div class="row-price"><span class="badge badge-always">Always included</span></div>
+  <div class="row-actions">
+    <button class="btn-upload ${upCls}" onclick="triggerUpload('glass','clear-glass')">${layer ? 'Replace' : 'Upload'}</button>
+  </div>
+</div>`;
+  }
+
+  // Steelcase Avenir — per-size glass prices
+  const glassOpts = pageData.glass_options || [];
+  const clearG    = glassOpts.find(g => g.slug === 'clear-glass');
+  const frostedG  = glassOpts.find(g => g.slug === 'frosted-glass');
+  const oneSideG  = glassOpts.find(g => g.slug === 'one-side-only');
+
+  function glassRow(glass) {
+    if (!glass) return '';
+    const p     = pageData.pricing.glass_addons[size.id]?.[glass.id];
+    const layer = layersData.glass?.[glass.slug];
+    const thumb = layer
+      ? `<div class="row-thumb uploaded"><img src="${esc(layer.url)}" alt="${esc(glass.name)}"><span class="status-dot green"></span></div>`
+      : `<div class="row-thumb missing"><div class="thumb-glass"></div><span class="status-dot red"></span></div>`;
+    const upCls = layer ? 'uploaded' : 'missing';
+    return `
+<div class="option-row">
+  ${thumb}
+  <div class="row-info">
+    <div class="row-name">${esc(glass.name)}</div>
+    <div class="row-desc">${esc(glass.description || '')}</div>
+  </div>
+  <div class="row-price">
+    <div class="price-field">
+      <span class="price-prefix">+$</span>
+      <input type="number" class="row-price-input price-input"
+        value="${p ? p.price : ''}" placeholder="0" min="0" step="1"
+        data-type="glass"
+        data-option-id="${glass.id}"
+        data-size-id="${size.id}"
+        data-original="${p ? p.price : ''}">
+    </div>
+  </div>
+  <div class="row-actions">
+    <button class="btn-upload ${upCls}" onclick="triggerUpload('glass','${glass.slug}')">${layer ? 'Replace' : 'Upload'}</button>
+  </div>
+</div>`;
+  }
+
+  let rows = glassRow(clearG) + glassRow(frostedG);
+  if (isLShape && oneSideG) rows += glassRow(oneSideG);
+  return rows;
+}
+
+function buildMiscRows() {
+  const bgLayer = layersData.background;
+  const wsLayer = layersData.worksurface;
+  const bgThumb = bgLayer
+    ? `<div class="row-thumb uploaded"><img src="${esc(bgLayer.url)}" alt="background"><span class="status-dot green"></span></div>`
+    : `<div class="row-thumb missing"><div class="thumb-bg"></div><span class="status-dot red"></span></div>`;
+  const wsThumb = wsLayer
+    ? `<div class="row-thumb uploaded"><img src="${esc(wsLayer.url)}" alt="worksurface"><span class="status-dot green"></span></div>`
+    : `<div class="row-thumb missing"><div class="thumb-ped"></div><span class="status-dot red"></span></div>`;
+
+  return `
+<div class="option-row">
+  ${bgThumb}
+  <div class="row-info">
+    <div class="row-name">Background</div>
+    <div class="row-desc">Studio background layer</div>
+  </div>
+  <div class="row-price"></div>
+  <div class="row-actions">
+    <button class="btn-upload ${bgLayer ? 'uploaded' : 'missing'}" onclick="triggerUpload('background','')">${bgLayer ? 'Replace' : 'Upload'}</button>
+  </div>
+</div>
+<div class="option-row">
+  ${wsThumb}
+  <div class="row-info">
+    <div class="row-name">Worksurface</div>
+    <div class="row-desc">Desk surface layer</div>
+  </div>
+  <div class="row-price"></div>
+  <div class="row-actions">
+    <button class="btn-upload ${wsLayer ? 'uploaded' : 'missing'}" onclick="triggerUpload('worksurface','')">${wsLayer ? 'Replace' : 'Upload'}</button>
+  </div>
+</div>`;
+}
+
+function heightThumb(isShort) {
+  const h = isShort ? 60 : 80;
+  const fill = '#9A9488';
+  return `<div class="row-thumb missing" style="background:transparent;border:none;align-items:flex-end;justify-content:center">
+    <svg width="28" height="${h * 0.45}" viewBox="0 0 28 ${h * 0.45}" fill="none">
+      <rect x="0" y="0" width="28" height="${h * 0.45}" rx="2" fill="${fill}" opacity=".25"/>
+      <rect x="6" y="${h * 0.45 - 8}" width="16" height="8" rx="1" fill="${fill}" opacity=".4"/>
+    </svg>
+  </div>`;
+}
+
+// ── Pedestal section ──────────────────────────────────────────────────────
+function renderPedestalSection() {
+  const isLShape = currentStyle === 'l-shape';
+  const allPeds  = pageData.pedestals || [];
+  const visible  = isLShape ? allPeds : allPeds.filter(p => !p.l_shape_only);
+
+  const rows = visible.map(ped => {
+    if (ped.slug === 'none') {
+      return `
+<div class="option-row">
+  <div class="row-thumb missing"><div class="thumb-ped"></div></div>
+  <div class="row-info">
+    <div class="row-name">No Pedestal</div>
+    <div class="row-desc">No storage unit added</div>
+  </div>
+  <div class="row-price"><span class="badge badge-included">Included</span></div>
+  <div class="row-actions"></div>
+</div>`;
+    }
+    const p     = pageData.pricing.pedestal_addons[ped.id];
+    const layer = layersData.pedestal?.[ped.slug];
+    const thumb = layer
+      ? `<div class="row-thumb uploaded"><img src="${esc(layer.url)}" alt="${esc(ped.name)}"><span class="status-dot green"></span></div>`
+      : `<div class="row-thumb missing"><div class="thumb-ped"></div><span class="status-dot red"></span></div>`;
+    const upCls = layer ? 'uploaded' : 'missing';
+    return `
+<div class="option-row">
+  ${thumb}
+  <div class="row-info">
+    <div class="row-name">${esc(ped.name)}</div>
+    <div class="row-desc">${esc(ped.description || '')}</div>
+  </div>
+  <div class="row-price">
+    <div class="price-field">
+      <span class="price-prefix">+$</span>
+      <input type="number" class="row-price-input price-input"
+        value="${p ? p.price : ''}" placeholder="0" min="0" step="1"
+        data-type="pedestal"
+        data-option-id="${ped.id}"
+        data-size-id=""
+        data-original="${p ? p.price : ''}">
+    </div>
+  </div>
+  <div class="row-actions">
+    <button class="btn-upload ${upCls}" onclick="triggerUpload('pedestal','${ped.slug}')">${layer ? 'Replace' : 'Upload'}</button>
+  </div>
+</div>`;
+  }).join('');
+
+  document.getElementById('pedestal-section').innerHTML = `
+<div class="pedestal-section">
+  <div class="pedestal-section-header">
+    <div class="pedestal-section-title">Pedestal Add-ons</div>
+    <div class="pedestal-section-sub">Same price across all brands &amp; sizes</div>
+  </div>
+  <div class="pedestal-body">${rows}</div>
+  <div class="pedestal-footer">
+    <span class="footer-hint">Press Enter on any price to save individually</span>
+    <button class="btn-save-all" onclick="saveAllPedestals()">Save all pedestal prices</button>
+  </div>
+</div>`;
+}
+
+// ── Price saving ──────────────────────────────────────────────────────────
+// Global Enter listener for price inputs
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.classList.contains('price-input')) {
+    e.preventDefault();
+    saveSingleInput(e.target);
+  }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.classList.contains('price-input')) {
+    const original = parseFloat(e.target.dataset.original);
+    const current  = parseFloat(e.target.value);
+    e.target.classList.toggle('dirty', !isNaN(original) && original !== current || (isNaN(original) && e.target.value !== ''));
+  }
+});
+
+async function saveSingleInput(input) {
+  const price    = parseFloat(input.value);
+  const type     = input.dataset.type;
+  const optionId = input.dataset.optionId || null;
+  const sizeId   = input.dataset.sizeId   || null;
+  if (isNaN(price)) return;
+  input.disabled = true;
+  const ok = await savePrice(type, optionId, sizeId, price);
+  input.disabled = false;
+  if (ok) {
+    input.dataset.original = price;
+    input.classList.remove('dirty');
+    input.classList.add('saved');
+    setTimeout(() => input.classList.remove('saved'), 2000);
+  }
+}
+
+async function saveAllInCard(sizeId) {
+  const card = document.getElementById('card-' + sizeId);
+  if (!card) return;
+  const btn    = card.querySelector('.btn-save-all');
+  const inputs = card.querySelectorAll('.price-input');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  await Promise.all(Array.from(inputs).map(inp => saveSingleInput(inp)));
+  btn.textContent = 'Saved!';
+  setTimeout(() => { btn.textContent = 'Save all prices'; btn.disabled = false; }, 2000);
+}
+
+async function saveAllPedestals() {
+  const section = document.getElementById('pedestal-section');
+  const btn     = section.querySelector('.btn-save-all');
+  const inputs  = section.querySelectorAll('.price-input');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+  await Promise.all(Array.from(inputs).map(inp => saveSingleInput(inp)));
+  btn.textContent = 'Saved!';
+  setTimeout(() => { btn.textContent = 'Save all pedestal prices'; btn.disabled = false; }, 2000);
+}
+
+async function savePrice(type, optionId, sizeId, priceUsd) {
+  try {
+    const body = { type, option_id: optionId, size_id: sizeId || undefined,
+      brand_slug: currentBrand, style_slug: currentStyle, price_usd: priceUsd };
+    const d = await apiFetch('/api/admin/pricing', { method: 'PUT', body: JSON.stringify(body) });
+    if (!d.success) { toast(d.error || 'Save failed', 'error'); return false; }
+    return true;
+  } catch (e) {
+    toast(e.message, 'error'); return false;
+  }
+}
+
+// ── Layer uploads ─────────────────────────────────────────────────────────
+function triggerUpload(layerType, optionSlug) {
+  pendingUpload = { layerType, optionSlug: optionSlug || null };
+  document.getElementById('shared-file-input').value = '';
+  document.getElementById('shared-file-input').click();
+}
+
+document.getElementById('shared-file-input').addEventListener('change', async function () {
+  if (!pendingUpload || !this.files[0]) return;
+  const { layerType, optionSlug } = pendingUpload;
+  pendingUpload = null;
+  await doUpload(this.files[0], layerType, optionSlug);
+});
+
+async function doUpload(file, layerType, optionSlug) {
+  toast('Uploading…', 'warn');
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('brand_slug', currentBrand);
+  fd.append('style_slug', currentStyle);
+  fd.append('layer_type', layerType);
+  if (optionSlug) fd.append('option_slug', optionSlug);
+  try {
+    const r = await fetch('/api/admin/layers/upload', {
+      method: 'POST',
+      headers: { Authorization: adminToken },
+      body: fd
+    });
+    const d = await r.json();
+    if (d.success) {
+      toast('Image uploaded', 'success');
+      await loadProductsData();
+    } else {
+      toast(d.error || 'Upload failed', 'error');
+    }
+  } catch (e) {
+    toast(e.message, 'error');
+  }
+}
+
+// ── Orders ────────────────────────────────────────────────────────────────
+async function loadOrders() {
+  document.getElementById('orders-loading').style.display = '';
+  document.getElementById('orders-table-wrap').style.display = 'none';
+  try {
+    const d = await apiFetch('/api/admin/configs');
+    allOrders = d.configs || [];
+    document.getElementById('orders-loading').style.display = 'none';
+    document.getElementById('orders-table-wrap').style.display = '';
+    renderOrders(allOrders);
+  } catch (e) {
+    document.getElementById('orders-loading').style.display = 'none';
+    toast('Failed to load orders: ' + e.message, 'error');
+  }
+}
+
+function filterOrders() {
+  const q    = document.getElementById('orders-search').value.toLowerCase();
+  const from = document.getElementById('orders-from').value;
+  const to   = document.getElementById('orders-to').value;
+  const filtered = allOrders.filter(c => {
+    const matchQ = !q || (c.config_code||'').toLowerCase().includes(q) ||
+                          (c.client_name||'').toLowerCase().includes(q) ||
+                          (c.client_email||'').toLowerCase().includes(q);
+    const d = c.created_at?.slice(0, 10) || '';
+    const matchFrom = !from || d >= from;
+    const matchTo   = !to   || d <= to;
+    return matchQ && matchFrom && matchTo;
+  });
+  renderOrders(filtered);
+}
+
+function renderOrders(configs) {
+  const tbody = document.getElementById('orders-tbody');
+  if (!configs.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="no-data">No configurations yet</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = configs.map(c => {
+    const date  = c.created_at ? new Date(c.created_at).toLocaleDateString() : '—';
+    const price = c.total_price_usd ? `$${Number(c.total_price_usd).toLocaleString()}` : '—';
+    const client = c.client_name || c.client_email || '—';
+    const sizeLabel = c.size_id ? '' : '';
+    return `<tr>
+      <td><span class="config-code">${esc(c.config_code||'')}</span></td>
+      <td>${date}</td>
+      <td>${esc(c.notes ? c.notes.slice(0,30) : '—')}</td>
+      <td>${esc(client)}</td>
+      <td>${price}</td>
+      <td><div class="actions-cell">
+        <a class="btn-action btn-view" href="/?code=${esc(c.config_code)}" target="_blank">View</a>
+        <a class="btn-action btn-pdf" href="/api/pdf/download/${esc(c.config_code)}" target="_blank">PDF</a>
+      </div></td>
     </tr>`;
   }).join('');
 }
 
-function editPrice(id, current) {
-  const cell = document.getElementById(`price-cell-${id}`);
-  cell.innerHTML = `
-    <input class="price-edit" id="price-inp-${id}" type="number" value="${current}" min="0">
-    <button class="btn-save-price" onclick="savePrice('${id}')">✓</button>
-    <button class="btn-cancel-price" onclick="loadPricing()">✕</button>`;
-  const inp = document.getElementById(`price-inp-${id}`);
-  inp.focus(); inp.select();
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') savePrice(id); if (e.key === 'Escape') loadPricing(); });
-}
-
-async function savePrice(id) {
-  const inp = document.getElementById(`price-inp-${id}`);
-  const val = parseFloat(inp?.value);
-  if (isNaN(val)) return;
-
-  const cell = document.getElementById(`price-cell-${id}`);
-  cell.innerHTML = '<span class="inline-spinner"></span>';
-
-  try {
-    const res  = await fetch(`/api/admin/pricing/${id}`, {
-      method: 'PUT',
-      headers: { 'Authorization': adminPw, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ price_usd: val }),
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error);
-    cell.innerHTML = `
-      <span class="price-display" title="Click to edit" onclick="editPrice('${id}','${val}')">
-        $${val.toLocaleString('en-US',{minimumFractionDigits:0})}
-      </span>
-      <span class="saved-check">✓ Saved</span>`;
-    setTimeout(() => {
-      const check = cell.querySelector('.saved-check');
-      if (check) check.remove();
-    }, 2500);
-    toast('Price updated');
-  } catch (err) {
-    cell.innerHTML = `<div class="msg-err">${err.message}</div>`;
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────
-// TAB 3 — CONFIGURATIONS
-// ─────────────────────────────────────────────────────────────────────────
-async function loadConfigs() {
-  try {
-    const res  = await fetch('/api/admin/configs', { headers: { 'Authorization': adminPw } });
-    const data = await res.json();
-    allConfigsRaw = data.configs || [];
-    renderConfigsTable(allConfigsRaw);
-  } catch (err) {
-    document.getElementById('configs-tbody').innerHTML =
-      `<tr><td colspan="7"><div class="msg-err">Failed: ${err.message}</div></td></tr>`;
-  }
-}
-
-function filterConfigs() {
-  const q        = document.getElementById('config-search').value.toLowerCase().trim();
-  const dateFrom = document.getElementById('config-date-from').value;
-  const dateTo   = document.getElementById('config-date-to').value;
-
-  let filtered = allConfigsRaw;
-
-  if (q) {
-    filtered = filtered.filter(c =>
-      c.config_code?.toLowerCase().includes(q) ||
-      c.client_name?.toLowerCase().includes(q) ||
-      c.client_company?.toLowerCase().includes(q));
-  }
-  if (dateFrom) {
-    const from = new Date(dateFrom);
-    filtered = filtered.filter(c => new Date(c.created_at) >= from);
-  }
-  if (dateTo) {
-    const to = new Date(dateTo);
-    to.setHours(23, 59, 59, 999);
-    filtered = filtered.filter(c => new Date(c.created_at) <= to);
-  }
-
-  renderConfigsTable(filtered);
-}
-
-function exportConfigsCSV() {
-  const q        = document.getElementById('config-search').value.toLowerCase().trim();
-  const dateFrom = document.getElementById('config-date-from').value;
-  const dateTo   = document.getElementById('config-date-to').value;
-
-  let rows = allConfigsRaw;
-  if (q) rows = rows.filter(c =>
-    c.config_code?.toLowerCase().includes(q) ||
-    c.client_name?.toLowerCase().includes(q) ||
-    c.client_company?.toLowerCase().includes(q));
-  if (dateFrom) { const f = new Date(dateFrom); rows = rows.filter(c => new Date(c.created_at) >= f); }
-  if (dateTo)   { const t = new Date(dateTo); t.setHours(23,59,59,999); rows = rows.filter(c => new Date(c.created_at) <= t); }
-
-  const cols = ['config_code','client_name','client_email','client_company','quantity','base_price_usd','total_price_usd','notes','created_at'];
-  const header = cols.join(',');
-  const body = rows.map(r =>
-    cols.map(k => {
-      const v = r[k] ?? '';
-      return `"${String(v).replace(/"/g, '""')}"`;
-    }).join(',')
-  ).join('\n');
-
-  const blob = new Blob([header + '\n' + body], { type: 'text/csv' });
-  const url  = URL.createObjectURL(blob);
+function exportCSV() {
+  const from = document.getElementById('orders-from').value;
+  const to   = document.getElementById('orders-to').value;
+  const rows = allOrders.filter(c => {
+    const d = c.created_at?.slice(0, 10) || '';
+    return (!from || d >= from) && (!to || d <= to);
+  });
+  const cols = ['config_code','created_at','client_name','client_email','client_company','total_price_usd','quantity','notes'];
+  const csv  = [cols.join(','), ...rows.map(c => cols.map(k => JSON.stringify(c[k]??'')).join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
   const a    = document.createElement('a');
-  a.href = url;
+  a.href     = URL.createObjectURL(blob);
   a.download = `eltru-configs-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
-  URL.revokeObjectURL(url);
-  toast(`Exported ${rows.length} rows`);
 }
 
-function renderConfigsTable(configs) {
-  document.getElementById('config-count').textContent =
-    `${configs.length} config${configs.length !== 1 ? 's' : ''}`;
-
-  if (!configs.length) {
-    document.getElementById('configs-tbody').innerHTML =
-      '<tr><td colspan="7" class="empty-state">No configurations found.</td></tr>';
-    return;
+// ── Utilities ─────────────────────────────────────────────────────────────
+async function apiFetch(url, opts = {}) {
+  const defaults = { headers: { 'Content-Type': 'application/json', Authorization: adminToken } };
+  const merged   = { ...defaults, ...opts, headers: { ...defaults.headers, ...(opts.headers || {}) } };
+  if (opts.body && !(opts.body instanceof FormData)) {
+    merged.headers['Content-Type'] = 'application/json';
+  } else if (opts.body instanceof FormData) {
+    delete merged.headers['Content-Type']; // let browser set multipart boundary
   }
-
-  document.getElementById('configs-tbody').innerHTML = configs.map(c => {
-    const date   = new Date(c.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-    const price  = c.total_price_usd ?? c.base_price_usd;
-    const priceS = price ? `$${Number(price).toLocaleString('en-US',{minimumFractionDigits:0})}` : '—';
-    const client = c.client_name || c.client_company || '—';
-    const notes  = c.notes ? c.notes.substring(0,40) + (c.notes.length > 40 ? '…' : '') : '—';
-    return `<tr>
-      <td><span class="code-badge">${c.config_code}</span></td>
-      <td>${client}</td>
-      <td class="muted" style="max-width:160px">${notes}</td>
-      <td>${priceS}</td>
-      <td class="muted">${c.quantity || 1}</td>
-      <td class="muted">${date}</td>
-      <td>
-        <div class="row-actions">
-          <button class="btn-row view"  onclick="window.open('/?config=${c.config_code}','_blank')">View</button>
-          <button class="btn-row quote" onclick="window.open('/sales.html?config=${c.config_code}','_blank')">Quote</button>
-          <button class="btn-row pdf"   onclick="downloadPDF('${c.config_code}', this)">PDF</button>
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
+  const r = await fetch(url, merged);
+  if (r.status === 401) { doLogout(); throw new Error('Session expired'); }
+  return r.json();
 }
 
-async function downloadPDF(code, btn) {
-  const orig = btn.textContent;
-  btn.disabled = true; btn.textContent = '…';
-  try {
-    const res  = await fetch('/api/pdf', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ config_code: code }),
-    });
-    if (!res.ok) throw new Error('PDF failed');
-    const blob = await res.blob();
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = `eltru-${code}.pdf`; a.click();
-    URL.revokeObjectURL(url);
-    toast('PDF downloaded');
-  } catch (err) { toast('PDF failed: ' + err.message, false); }
-  finally { btn.disabled = false; btn.textContent = orig; }
+function toast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// TAB 4 — PRODUCTS
-// ─────────────────────────────────────────────────────────────────────────
-function renderProducts() {
-  if (!OPTIONS) return;
-  const wrap = document.getElementById('products-body');
-
-  let html = '';
-
-  // Brands → styles → sizes tree
-  html += '<div class="product-section-title">Brands &amp; Styles</div>';
-  for (const brand of (OPTIONS.brands || [])) {
-    html += `<div class="product-tree">
-      <div class="brand-header">${brand.name} <small style="opacity:.7;font-size:.8rem">${brand.slug}</small></div>
-      <div class="styles-wrap">`;
-    for (const style of (brand.styles || [])) {
-      html += `<div class="style-row">
-        <div class="style-name">${style.name} <span style="font-weight:400;color:var(--muted);font-size:.8rem">${style.slug}</span></div>
-        <div class="sizes-list">
-          ${(style.sizes || []).map(sz =>
-            `<span class="size-chip">${sz.label}</span>`
-          ).join('')}
-        </div>
-      </div>`;
-    }
-    html += '</div></div>';
-  }
-
-  // Heights
-  html += '<div class="product-section-title">Panel Heights</div>';
-  for (const [brand, heights] of Object.entries(OPTIONS.heights || {})) {
-    html += `<div style="margin-bottom:16px">
-      <div style="font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">${brand}</div>
-      <div class="option-chips">${(heights || []).map(h =>
-        `<span class="option-chip">${h.label} (${h.height_in}")</span>`
-      ).join('')}</div>
-    </div>`;
-  }
-
-  // Fabrics with swatches
-  html += '<div class="product-section-title">Fabrics</div>';
-  html += '<div class="swatches-row">';
-  for (const f of (OPTIONS.fabrics || [])) {
-    html += `<div class="swatch-item">
-      <div class="swatch-dot" style="background:${f.hex_color}"></div>
-      <span class="swatch-name">${f.name}</span>
-    </div>`;
-  }
-  html += '</div>';
-
-  // Trims with swatches
-  html += '<div class="product-section-title">Trims</div>';
-  html += '<div class="swatches-row">';
-  for (const t of (OPTIONS.trims || [])) {
-    html += `<div class="swatch-item">
-      <div class="swatch-dot" style="background:${t.hex_color}"></div>
-      <span class="swatch-name">${t.name}</span>
-    </div>`;
-  }
-  html += '</div>';
-
-  // Glass options
-  html += '<div class="product-section-title">Glass Options</div>';
-  html += '<div class="option-chips">';
-  for (const g of (OPTIONS.glass_options || [])) {
-    html += `<span class="option-chip">${g.name}</span>`;
-  }
-  html += '</div>';
-
-  // Pedestals
-  html += '<div class="product-section-title">Pedestals / Storage</div>';
-  html += '<div class="option-chips">';
-  for (const p of (OPTIONS.pedestals || [])) {
-    html += `<span class="option-chip">${p.name}</span>`;
-  }
-  html += '</div>';
-
-  html += `<div class="admin-note">
-    To add new brands, styles, or options: update the database via the
-    <strong>Supabase dashboard</strong> or re-run <code>node db/seed.js</code>.
-    Layer images can be uploaded above in the Layer Assets tab.
-  </div>`;
-
-  wrap.innerHTML = html;
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-function escHtml(str) {
-  return str.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-// ── Boot with pre-loaded sales.html config param ─────────────────────────
-// (sales.html passes ?config=CODE so admin can jump straight to that config)
-const _urlCfg = new URLSearchParams(location.search).get('config');
-if (_urlCfg) {
-  // Pre-fill config search once app loads
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('config-search').value = _urlCfg;
-  });
+function esc(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
 </body>
